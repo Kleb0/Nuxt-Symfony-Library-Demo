@@ -83,12 +83,10 @@ const confirmClass = computed(() => {
 function handleImageUpload(event) {
   const file = event.target.files[0]
   if (file) {
-    console.log('Fichier sélectionné:', file.name, 'Type:', file.type)
     imageFile.value = file
     const reader = new FileReader()
     reader.onload = (e) => {
       const result = e.target.result
-      console.log('Image convertie, type détecté:', result.substring(0, 50))
       imagePreview.value = result
     }
     reader.readAsDataURL(file)
@@ -140,7 +138,6 @@ async function submitForm() {
     let imageBase64 = null
     if (imageFile.value) {
       imageBase64 = await convertImageToJpeg(imageFile.value)
-      console.log('Image convertie en JPEG:', imageBase64.substring(0, 50))
     }
 
     const response = await $fetch('http://localhost:8000/api/users', {

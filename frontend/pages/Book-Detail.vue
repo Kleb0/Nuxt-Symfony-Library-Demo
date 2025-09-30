@@ -11,6 +11,17 @@
           <h2 class="title">Résumé</h2>
           <p class="resume">{{ book.resume || '—' }}</p>
           <div class="price"><strong>Prix:</strong> <span>{{ book.unitPrice ? book.unitPrice + '€' : '—' }}</span></div>
+          <button 
+            v-if="isLoggedIn" 
+            @click="addToCart" 
+            class="add-to-cart-btn"
+            :disabled="isAdding"
+          >
+            {{ isAdding ? 'Ajout...' : 'Ajouter au panier' }}
+          </button>
+          <div v-if="!isLoggedIn" class="login-required">
+            Connectez-vous pour ajouter au panier
+          </div>
         </div>
       </div>
     </div>
@@ -23,10 +34,12 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const route = useRoute()
 const q = route.query || {}
 const book = {
+  id: q.id || '',
   titre: q.titre || '',
   auteur: q.auteur || '',
   categorie: q.categorie || '',
@@ -34,6 +47,58 @@ const book = {
   resume: q.resume || '',
   unitPrice: q.unitPrice || ''
 }
+
+const isLoggedIn = ref(false)
+const isAdding = ref(false)
+
+const checkLoginStatus = () => {
+  const savedLoginState = localStorage.getItem('isLoggedIn')
+  const savedUserId = localStorage.getItem('userId')
+  isLoggedIn.value = savedLoginState === 'true' && !!savedUserId
+}
+
+const addToCart = async () => {
+  if (!isLoggedIn.value || isAdding.value) return
+  
+  isAdding.value = true
+  
+  try {
+    const userId = localStorage.getItem('userId')
+    if (!userId) {
+      isAdding.value = false
+      return
+    }
+
+    const response = await $fetch(`http://127.0.0.1:8000/api/cart/user/${userId}/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        bookId: parseInt(book.id),
+        quantity: 1
+      })
+    })
+
+
+    setTimeout(() => {
+      isAdding.value = false
+    }, 500)
+    
+  } catch (error) {
+    isAdding.value = false
+  }
+}
+
+onMounted(() => {
+  checkLoginStatus()
+  
+  const interval = setInterval(checkLoginStatus, 1000)
+  
+  onUnmounted(() => {
+    clearInterval(interval)
+  })
+})
 </script>
 
 <style scoped>
@@ -124,6 +189,42 @@ const book = {
   font-size: 1.1rem;
 }
 
+.add-to-cart-btn {
+  background: #DEA54A;
+  color: #3b3434;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.0rem;
+  cursor: pointer;
+  margin-top: 250px;
+  width: 100%;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.add-to-cart-btn:hover:not(:disabled) {
+  background: #2a1f1f;
+  color: #fff;
+}
+
+.add-to-cart-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-required {
+  margin-top: 250px;
+  padding: 12px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  color: #ff0000;
+  text-align: center;
+  font-style: italic;
+}
+
 .BackWrapper {
   width: 100%;
   display: flex;
@@ -138,7 +239,6 @@ const book = {
   padding: 10px 20px;
   border-radius: 10px;
   text-decoration: none;
-  font-weight: 600;
   font-family: 'Roboto', sans-serif;
   box-shadow: 0 6px 18px rgba(0,0,0,0.12);
   transition: background 0.2s, color 0.2s;

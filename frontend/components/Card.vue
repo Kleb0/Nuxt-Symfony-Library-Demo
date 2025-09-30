@@ -29,6 +29,7 @@ const goToDetail = () => {
   router.push({
     path: '/Book-Detail',
     query: {
+      id: b.id || '',
       titre: b.titre || '',
       auteur: b.auteur || '',
       categorie: b.categorie || '',

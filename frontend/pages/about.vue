@@ -9,6 +9,4 @@
 </template>
 
 <script setup lang="ts">
-// Page à propos
-console.log('About page loaded')
 </script>

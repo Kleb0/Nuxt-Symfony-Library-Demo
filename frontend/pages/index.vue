@@ -11,7 +11,6 @@
 import Carousel from '../components/carousel.vue';
 import HeroPage from '../components/HeroPage.vue';
 
-console.log('Index page loaded with components')
 </script>
 
 <style>

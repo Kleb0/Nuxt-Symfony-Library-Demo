@@ -77,7 +77,6 @@ const fetchBooks = async () => {
     
     scrollOffset.value = -(allBooks.value.length * cardWidth);
     
-    console.log('Nombre total de livres disponibles:', allBooks.value.length);
 
   } catch (error) {
     allBooks.value = [];

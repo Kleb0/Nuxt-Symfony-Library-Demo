@@ -93,18 +93,7 @@ function onImageError(event: Event) {
   console.error('Erreur de chargement de l\'image:', event)
   console.log('URL de l\'image qui a échoué (100 premiers chars):', (event.target as HTMLImageElement)?.src?.substring(0, 100))
   
-  // Test de validité de l'image base64
-  if (user.value.imageProfil) {
-    console.log('Test de validité de l\'image...')
-    const testImg = new Image()
-    testImg.onload = () => {
-      console.log('✅ Image base64 est valide - problème d\'affichage Vue')
-    }
-    testImg.onerror = () => {
-      console.error('❌ Image base64 est corrompue')
-    }
-    testImg.src = user.value.imageProfil
-  }
+
 }
 
 onMounted(async () => {

@@ -126,6 +126,7 @@ function logout() {
   loginInput.value = ''
   passwordInput.value = ''
   errorMessage.value = ''  
+  
   localStorage.removeItem('isLoggedIn')
   localStorage.removeItem('userId')
   localStorage.removeItem('userToken')
