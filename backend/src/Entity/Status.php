@@ -30,6 +30,10 @@ class Status
     #[Groups(['status:read', 'user:read'])]
     private ?string $statusName = null;
 
+    #[ORM\Column(type: 'integer', unique: true)]
+    #[Groups(['status:read', 'user:read'])]
+    private ?int $statusState = null;
+
     public function getStatusId(): ?int
     {
         return $this->statusId;
@@ -50,6 +54,18 @@ class Status
     public function setStatusName(string $statusName): static
     {
         $this->statusName = $statusName;
+
+        return $this;
+    }
+
+    public function getStatusState(): ?int
+    {
+        return $this->statusState;
+    }
+
+    public function setStatusState(int $statusState): static
+    {
+        $this->statusState = $statusState;
 
         return $this;
     }

@@ -100,16 +100,11 @@ class User
     #[Groups(['user:read', 'user:write'])]
     private ?string $telephone = null;
 
-    #[ORM\Column(type: 'integer')]
-    #[Assert\NotBlank(message: 'Le statut ne peut pas être vide')]
-    #[Groups(['user:read', 'user:write'])]
-    private ?int $statusId = null;
-
     #[ORM\ManyToMany(targetEntity: Status::class)]
     #[ORM\JoinTable(
         name: 'user_status',
         joinColumns: [new ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id')],
-        inverseJoinColumns: [new ORM\JoinColumn(name: 'status_id', referencedColumnName: 'status_id')]
+        inverseJoinColumns: [new ORM\JoinColumn(name: 'status_state', referencedColumnName: 'status_state')]
     )]
     #[Groups(['user:read'])]
     private Collection $statuses;
@@ -265,19 +260,6 @@ class User
         return $this;
     }
 
-    public function getStatusId(): ?int
-    {
-        return $this->statusId;
-    }
-
-    public function setStatusId(?int $statusId): static
-    {
-        $this->statusId = $statusId;
-        $this->updatedAt = new \DateTimeImmutable();
-
-        return $this;
-    }
-
     public function getStatus(): ?Status
     {
         return $this->statuses->first() ?: null;
@@ -288,7 +270,6 @@ class User
         $this->statuses->clear();
         if ($status !== null) {
             $this->statuses->add($status);
-            $this->statusId = $status->getStatusId();
         }
         $this->updatedAt = new \DateTimeImmutable();
 
@@ -428,6 +409,15 @@ class User
         return trim($this->prenom . ' ' . $this->nom);
     }
 
+    public function getActiveCart(): ?Cart
+    {
+        // Retourne le dernier panier (le plus récent) de l'utilisateur
+        if ($this->carts->isEmpty()) {
+            return null;
+        }
+        
+        return $this->carts->last();
+    }
 
     public function __toString(): string
     {

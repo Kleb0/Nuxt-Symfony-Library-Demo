@@ -26,16 +26,23 @@ const router = useRouter()
 
 const goToDetail = () => {
   const b = props.book || {}
+  
+  // Mapping des données API vers les champs attendus
+  const authorNames = b.authors ? b.authors.map(author => 
+    author.fullName || `${author.firstName || ''} ${author.lastName || ''}`.trim()
+  ).join(', ') : ''
+  const categoryNames = b.categories ? b.categories.map(category => category.name).join(', ') : ''
+  
   router.push({
     path: '/Book-Detail',
     query: {
       id: b.id || '',
       titre: b.titre || '',
-      auteur: b.auteur || '',
-      categorie: b.categorie || '',
+      auteur: authorNames,
+      categorie: categoryNames,
       image: b.image || '',
-      resume: b.resume || '',
-      unitPrice: b.unitPrice != null ? String(b.unitPrice) : ''
+      resume: b.description || '',
+      unitPrice: b.prix ? String(b.prix) : ''
     }
   })
 }

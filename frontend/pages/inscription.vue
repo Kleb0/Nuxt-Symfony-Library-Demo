@@ -193,7 +193,6 @@ function convertImageToJpeg(file) {
     const img = new Image()
     
     img.onload = () => {
-      // Garder la taille originale de l'image
       const { width, height } = img
       
       canvas.width = width

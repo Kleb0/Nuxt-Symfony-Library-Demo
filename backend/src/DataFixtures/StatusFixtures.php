@@ -10,16 +10,30 @@ class StatusFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $adminStatus = new Status();
-        $adminStatus->setStatusId(1);
-        $adminStatus->setStatusName('Admin');
-        $manager->persist($adminStatus);
+        $statuses = [
+            [
+                'statusState' => 1,
+                'statusName' => 'User',
+            ],
+            [
+                'statusState' => 2,
+                'statusName' => 'Admin',
+            ],
+            [
+                'statusState' => 3,
+                'statusName' => 'Moderator',
+            ],
+        ];
 
-        $userStatus = new Status();
-        $userStatus->setStatusId(2);
-        $userStatus->setStatusName('User');
-        $manager->persist($userStatus);
-
+        foreach ($statuses as $index => $data) {
+            $status = new Status();
+            $status->setStatusState($data['statusState']);
+            $status->setStatusName($data['statusName']);
+            
+            $manager->persist($status);
+            $this->addReference('status-' . $data['statusState'], $status);
+        }
+        
         $manager->flush();
     }
 }

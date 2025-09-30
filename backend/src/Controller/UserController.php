@@ -38,8 +38,13 @@ class UserController extends AbstractController
             'pseudo' => $user->getPseudo(),
             'telephone' => $user->getTelephone(),
             'adresse' => $user->getAdresse(),
-            'status_id' => $user->getStatusId(),
-            'status_name' => $user->getStatus() ? $user->getStatus()->getStatusName() : null,
+            'statuses' => array_map(function($status) {
+                return [
+                    'status_id' => $status->getStatusId(),
+                    'status_name' => $status->getStatusName(),
+                    'status_state' => $status->getStatusState()
+                ];
+            }, $user->getStatuses()->toArray()),
             'created_at' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
             'updated_at' => $user->getUpdatedAt()->format('Y-m-d H:i:s')
         ]);

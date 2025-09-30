@@ -3,41 +3,31 @@
 namespace App\DataFixtures;
 
 use App\Entity\User;
+use App\Entity\Status;
 use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 
 class UserFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
-        // Créer l'utilisateur admin demandé
-        // Status ID 1 = Admin, Status ID 2 = User
-        $adminSpecial = new User();
-        $adminSpecial->setNom('Admin');
-        $adminSpecial->setPrenom('Super');
-        $adminSpecial->setPseudo('admin');
-        $adminSpecial->setMail('admin@outlook.com');
-        $adminSpecial->setMotDePasse('admin'); 
-        $adminSpecial->setAdresse('1 Rue de l\'Administration, 75000 Paris');
-        $adminSpecial->setTelephone('0100000000');
-        $adminSpecial->setStatusId(1); // Admin
-        $adminSpecial->setImageProfil('admin-profile.jpg');
-        $manager->persist($adminSpecial);
-
-        // Créer quelques utilisateurs de test
-        $user1 = new User();
-        $user1->setNom('Martin');
-        $user1->setPrenom('Marie');
-        $user1->setPseudo('marie');
-        $user1->setMail('marie@example.com');
-        $user1->setMotDePasse('marie123');
-        $user1->setAdresse('123 Rue de Lyon, 69000 Lyon');
-        $user1->setTelephone('0123456789');
-        $user1->setStatusId(2); // User
-        $user1->setImageProfil('user.jpg');
-        $manager->persist($user1);
-
+        $admin = new User();
+        $admin->setNom('Admin');
+        $admin->setPrenom('Super');
+        $admin->setPseudo('admin');
+        $admin->setAdresse('123 Rue de l\'Administration, 75001 Paris');
+        $admin->setMail('admin@library.com');
+        $admin->setMotDePasse('admin'); 
+        $admin->setImageProfil('images/admin-avatar.jpg');
+        $admin->setTelephone('0123456789');
+        
+        $statusAdmin = $this->getReference('status-2', Status::class);
+        $admin->addStatus($statusAdmin);
+        
+        $manager->persist($admin);
+        $this->addReference('user-admin', $admin);
+        
         $manager->flush();
     }
 

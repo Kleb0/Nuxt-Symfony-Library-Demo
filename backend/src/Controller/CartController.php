@@ -5,16 +5,14 @@ namespace App\Controller;
 use App\Entity\Cart;
 use App\Entity\User;
 use App\Entity\Book;
-use App\Entity\CartItem;
+use App\Service\CartService;
 use App\Repository\CartRepository;
-use App\Repository\CartItemRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/cart')]
 class CartController extends AbstractController
@@ -22,8 +20,7 @@ class CartController extends AbstractController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CartRepository $cartRepository,
-        private CartItemRepository $cartItemRepository,
-        private SerializerInterface $serializer
+        private CartService $cartService
     ) {}
 
     #[Route('', name: 'cart_index', methods: ['GET'])]
@@ -106,27 +103,7 @@ class CartController extends AbstractController
                 return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
             }
 
-            $carts = $user->getCarts();
-            $activeCart = $carts->last();
-
-            if (!$activeCart) {
-                return $this->json([], Response::HTTP_OK);
-            }
-
-            $cartItems = $this->cartItemRepository->findBy(['cart' => $activeCart]);
-            $items = [];
-
-            foreach ($cartItems as $cartItem) {
-                $book = $cartItem->getBook();
-                $items[] = [
-                    'id' => $book->getId(),
-                    'titre' => $book->getTitre(),
-                    'auteur' => $book->getAuteur(),
-                    'image' => $book->getImage(),
-                    'unitPrice' => (float) $book->getUnitPrice(),
-                    'quantity' => $cartItem->getQuantity()
-                ];
-            }
+            $items = $this->cartService->getCartItems($user);
 
             return $this->json($items, Response::HTTP_OK);
         } catch (\Exception $e) {
@@ -182,43 +159,12 @@ class CartController extends AbstractController
                 return $this->json(['message' => 'Book not found'], Response::HTTP_NOT_FOUND);
             }
 
-            $activeCart = $user->getCarts()->last();
-            
-            if (!$activeCart) {
-                $activeCart = new Cart();
-                $activeCart->setTotalPrice('0.00');
-                $this->entityManager->persist($activeCart);
-                $user->addCart($activeCart);
-                $this->entityManager->flush();
-            }
-
-            $existingCartItem = $this->cartItemRepository->findByCartAndBook($activeCart, $book);
-            
-            if ($existingCartItem) {
-                $existingCartItem->setQuantity($existingCartItem->getQuantity() + $quantity);
-            } else {
-                $cartItem = new CartItem();
-                $cartItem->setCart($activeCart);
-                $cartItem->setBook($book);
-                $cartItem->setQuantity($quantity);
-                $this->entityManager->persist($cartItem);
-            }
-
-            $this->entityManager->flush();
-
-            $cartItems = $this->cartItemRepository->findBy(['cart' => $activeCart]);
-            $newTotal = 0;
-            foreach ($cartItems as $item) {
-                $newTotal += (float) $item->getBook()->getUnitPrice() * $item->getQuantity();
-            }
-            $activeCart->setTotalPrice((string) $newTotal);
-
-            $this->entityManager->flush();
+            $result = $this->cartService->addItemToCart($user, $book, $quantity);
 
             return $this->json([
                 'message' => 'Item added to cart',
-                'cart_id' => $activeCart->getCartId(),
-                'total' => $activeCart->getTotalPrice()
+                'cart_id' => $result['cart_id'],
+                'total' => $result['total']
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return $this->json([
@@ -231,101 +177,73 @@ class CartController extends AbstractController
     #[Route('/user/{userId}/remove', name: 'cart_user_remove_item', methods: ['POST'])]
     public function removeItemFromUserCart(int $userId, Request $request): JsonResponse
     {
-        $userRepository = $this->entityManager->getRepository(User::class);
-        $user = $userRepository->find($userId);
+        try {
+            $userRepository = $this->entityManager->getRepository(User::class);
+            $user = $userRepository->find($userId);
 
-        if (!$user) {
-            return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode($request->getContent(), true);
-        $bookId = $data['bookId'] ?? null;
-
-        if (!$bookId) {
-            return $this->json(['message' => 'Book ID is required'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $bookRepository = $this->entityManager->getRepository(Book::class);
-        $book = $bookRepository->find($bookId);
-
-        if (!$book) {
-            return $this->json(['message' => 'Book not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $activeCart = $user->getCarts()->last();
-        
-        if ($activeCart) {
-            $cartItem = $this->cartItemRepository->findByCartAndBook($activeCart, $book);
-            
-            if ($cartItem) {
-                $this->entityManager->remove($cartItem);
-                
-                $cartItems = $this->cartItemRepository->findBy(['cart' => $activeCart]);
-                $newTotal = 0;
-                foreach ($cartItems as $item) {
-                    if ($item !== $cartItem) {
-                        $newTotal += (float) $item->getBook()->getUnitPrice() * $item->getQuantity();
-                    }
-                }
-                $activeCart->setTotalPrice((string) $newTotal);
-
-                $this->entityManager->flush();
+            if (!$user) {
+                return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
             }
-        }
 
-        return $this->json([
-            'message' => 'Item removed from cart',
-            'total' => $activeCart ? $activeCart->getTotalPrice() : '0.00'
-        ], Response::HTTP_OK);
+            $data = json_decode($request->getContent(), true);
+            $bookId = $data['bookId'] ?? null;
+
+            if (!$bookId) {
+                return $this->json(['message' => 'Book ID is required'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $bookRepository = $this->entityManager->getRepository(Book::class);
+            $book = $bookRepository->find($bookId);
+
+            if (!$book) {
+                return $this->json(['message' => 'Book not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            $result = $this->cartService->removeItemFromCart($user, $book);
+
+            return $this->json([
+                'message' => 'Item removed from cart',
+                'total' => $result['total']
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     #[Route('/user/{userId}/update-quantity', name: 'cart_user_update_quantity', methods: ['POST'])]
     public function updateItemQuantity(int $userId, Request $request): JsonResponse
     {
-        $userRepository = $this->entityManager->getRepository(User::class);
-        $user = $userRepository->find($userId);
+        try {
+            $userRepository = $this->entityManager->getRepository(User::class);
+            $user = $userRepository->find($userId);
 
-        if (!$user) {
-            return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode($request->getContent(), true);
-        $bookId = $data['bookId'] ?? null;
-        $quantity = $data['quantity'] ?? 1;
-
-        if (!$bookId || $quantity < 1) {
-            return $this->json(['message' => 'Book ID and valid quantity are required'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $bookRepository = $this->entityManager->getRepository(Book::class);
-        $book = $bookRepository->find($bookId);
-
-        if (!$book) {
-            return $this->json(['message' => 'Book not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $activeCart = $user->getCarts()->last();
-        
-        if ($activeCart) {
-            $cartItem = $this->cartItemRepository->findByCartAndBook($activeCart, $book);
-            
-            if ($cartItem) {
-                $cartItem->setQuantity($quantity);
-                
-                $cartItems = $this->cartItemRepository->findBy(['cart' => $activeCart]);
-                $newTotal = 0;
-                foreach ($cartItems as $item) {
-                    $newTotal += (float) $item->getBook()->getUnitPrice() * $item->getQuantity();
-                }
-                $activeCart->setTotalPrice((string) $newTotal);
-
-                $this->entityManager->flush();
+            if (!$user) {
+                return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
             }
-        }
 
-        return $this->json([
-            'message' => 'Quantity updated',
-            'total' => $activeCart ? $activeCart->getTotalPrice() : '0.00'
-        ], Response::HTTP_OK);
+            $data = json_decode($request->getContent(), true);
+            $bookId = $data['bookId'] ?? null;
+            $quantity = $data['quantity'] ?? 1;
+
+            if (!$bookId || $quantity < 1) {
+                return $this->json(['message' => 'Book ID and valid quantity are required'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $bookRepository = $this->entityManager->getRepository(Book::class);
+            $book = $bookRepository->find($bookId);
+
+            if (!$book) {
+                return $this->json(['message' => 'Book not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            $result = $this->cartService->updateItemQuantity($user, $book, $quantity);
+
+            return $this->json([
+                'message' => 'Quantity updated',
+                'total' => $result['total']
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -5,6 +5,7 @@
         <span class="header-title">Nuxt Symfony Library</span>
       </div>
       <nav class="menu-bar">
+        <ManagementButton />
         <NuxtLink to="/" class="menu-item">Accueil</NuxtLink>
         <NuxtLink to="/livres" class="menu-item">Livres</NuxtLink>
         <NuxtLink to="/about" class="menu-item">À propos</NuxtLink>
@@ -20,6 +21,7 @@
 <script setup>
 import LoginState from './LoginState.vue'
 import PanierButton from './PanierButton.vue'
+import ManagementButton from './ManagementButton.vue'
 </script>
 
 <style scoped>

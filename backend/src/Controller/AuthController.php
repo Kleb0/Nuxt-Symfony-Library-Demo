@@ -70,7 +70,14 @@ class AuthController extends AbstractController
                 'nom' => $user->getNom(),
                 'prenom' => $user->getPrenom(),
                 'email' => $user->getMail(),
-                'pseudo' => $user->getPseudo()
+                'pseudo' => $user->getPseudo(),
+                'statuses' => array_map(function($status) {
+                    return [
+                        'status_id' => $status->getStatusId(),
+                        'status_name' => $status->getStatusName(),
+                        'status_state' => $status->getStatusState()
+                    ];
+                }, $user->getStatuses()->toArray())
             ],
             'token' => $token
         ]);
