@@ -1,0 +1,98 @@
+# IDE et Editeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dépendances et modules
+node_modules/
+vendor/
+.pnp
+.pnp.js
+
+# Fichiers de build et dist
+dist/
+.nuxt/
+.output/
+.next/
+build/
+
+# Variables d'environnement
+.env
+.env.local
+.env.local.php
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache
+.cache/
+.temp/
+.tmp/
+*.cache
+
+# Symfony spécifique
+/backend/var/
+/backend/vendor/
+/backend/public/bundles/
+/backend/config/secrets/prod/prod.decrypt.private.php
+
+# Nuxt spécifique
+/frontend/.nuxt/
+/frontend/.output/
+/frontend/dist/
+/frontend/node_modules/
+
+# Fichiers de sauvegarde
+*.bak
+*.backup
+*.orig
+
+# Fichiers temporaires
+*.tmp
+*.temp
+
+# Coverage tests
+coverage/
+*.lcov
+
+# Webpack bundle analyzer
+.next/analyze/
+
+# Yarn
+.yarn-integrity
+yarn-error.log
+
+# npm
+.npm
+npm-debug.log*
+
+# PM2
+.pm2
+
+# Docker
+.docker/
+
+# Merise (fichiers de conception)
+# Décommentez si vous ne voulez pas versionner les fichiers Looping
+# Merise/*.loo
+# Merise/*.lo1
