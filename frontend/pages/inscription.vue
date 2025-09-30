@@ -199,15 +199,11 @@ function convertImageToJpeg(file) {
       canvas.width = width
       canvas.height = height
       
-      // Dessiner l'image sur le canvas avec un fond blanc
       ctx.fillStyle = 'white'
       ctx.fillRect(0, 0, width, height)
       ctx.drawImage(img, 0, 0, width, height)
       
-      // Convertir en JPEG base64 avec qualité maximale
-      const jpegBase64 = canvas.toDataURL('image/jpeg', 0.95) // Qualité élevée
-      console.log('Conversion JPEG terminée:', jpegBase64.substring(0, 30))
-      console.log('Taille finale:', jpegBase64.length)
+      const jpegBase64 = canvas.toDataURL('image/jpeg', 0.95) 
       resolve(jpegBase64)
     }
     

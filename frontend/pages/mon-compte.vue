@@ -16,8 +16,7 @@
             v-if="user.imageProfil && user.imageProfil.trim() !== ''" 
             :src="getImageSrc(user.imageProfil)" 
             alt="Photo de profil" 
-            class="profile-image"
-            @error="onImageError"
+            class="profile-image"            
           />
           <div v-else class="profile-image-placeholder">
             {{ user.prenom?.[0] }}{{ user.nom?.[0] }}
@@ -89,12 +88,6 @@ function getImageSrc(imageProfil: string) {
   return imageProfil
 }
 
-function onImageError(event: Event) {
-  console.error('Erreur de chargement de l\'image:', event)
-  console.log('URL de l\'image qui a échoué (100 premiers chars):', (event.target as HTMLImageElement)?.src?.substring(0, 100))
-  
-
-}
 
 onMounted(async () => {
   try {
@@ -124,14 +117,6 @@ onMounted(async () => {
         imageProfil: response.imageProfil
       }
       
-      console.log('Image profil reçue:', response.imageProfil)
-      console.log('Type de l\'image:', typeof response.imageProfil)
-      console.log('Longueur de l\'image:', response.imageProfil?.length)
-      console.log('Se termine par =:', response.imageProfil?.endsWith('='))
-      console.log('Fin de l\'image:', response.imageProfil?.slice(-20))
-      if (response.imageProfil) {
-        console.log('Début de l\'image:', response.imageProfil.substring(0, 50))
-      }
     }
   } catch (err) {
     console.error('Erreur lors de la récupération des données utilisateur:', err)

@@ -8,6 +8,7 @@
       <div class="Details">
         <div class="Details-content">
           <p class="meta"><strong>Auteur:</strong> {{ book.auteur || '—' }}</p>
+          <p class="meta"><strong>Catégorie:</strong> {{ book.categorie || '—' }}</p>
           <h2 class="title">Résumé</h2>
           <p class="resume">{{ book.resume || '—' }}</p>
           <div class="price"><strong>Prix:</strong> <span>{{ book.unitPrice ? book.unitPrice + '€' : '—' }}</span></div>
