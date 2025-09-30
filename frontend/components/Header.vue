@@ -8,6 +8,7 @@
         <NuxtLink to="/" class="menu-item">Accueil</NuxtLink>
         <NuxtLink to="/livres" class="menu-item">Livres</NuxtLink>
         <NuxtLink to="/about" class="menu-item">À propos</NuxtLink>
+        <PanierButton />
       </nav>
     </div>
         <div class="loginstate-wrapper">
@@ -18,6 +19,7 @@
 
 <script setup>
 import LoginState from './LoginState.vue'
+import PanierButton from './PanierButton.vue'
 </script>
 
 <style scoped>

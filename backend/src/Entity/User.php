@@ -114,6 +114,32 @@ class User
     #[Groups(['user:read'])]
     private Collection $statuses;
 
+    #[ORM\Column(type: 'integer', nullable: true)]
+    #[Groups(['user:read', 'user:write'])]
+    private ?int $cart_id = null;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    #[Groups(['user:read', 'user:write'])]
+    private ?int $cart_history_id = null;
+
+    #[ORM\ManyToMany(targetEntity: Cart::class)]
+    #[ORM\JoinTable(
+        name: 'user_carts',
+        joinColumns: [new ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id')],
+        inverseJoinColumns: [new ORM\JoinColumn(name: 'cart_id', referencedColumnName: 'cart_id')]
+    )]
+    #[Groups(['user:read'])]
+    private Collection $carts;
+
+    #[ORM\ManyToMany(targetEntity: CartHistory::class)]
+    #[ORM\JoinTable(
+        name: 'user_cart_histories',
+        joinColumns: [new ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id')],
+        inverseJoinColumns: [new ORM\JoinColumn(name: 'cart_history_id', referencedColumnName: 'cart_history_id')]
+    )]
+    #[Groups(['user:read'])]
+    private Collection $cartHistories;
+
     #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['user:read'])]
     private ?\DateTimeImmutable $createdAt = null;
@@ -126,6 +152,8 @@ class User
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->statuses = new ArrayCollection();
+        $this->carts = new ArrayCollection();
+        $this->cartHistories = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -311,6 +339,84 @@ class User
     public function setUpdatedAt(?\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getCartId(): ?int
+    {
+        return $this->cart_id;
+    }
+
+    public function setCartId(?int $cart_id): static
+    {
+        $this->cart_id = $cart_id;
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function getCartHistoryId(): ?int
+    {
+        return $this->cart_history_id;
+    }
+
+    public function setCartHistoryId(?int $cart_history_id): static
+    {
+        $this->cart_history_id = $cart_history_id;
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Cart>
+     */
+    public function getCarts(): Collection
+    {
+        return $this->carts;
+    }
+
+    public function addCart(Cart $cart): static
+    {
+        if (!$this->carts->contains($cart)) {
+            $this->carts->add($cart);
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+
+        return $this;
+    }
+
+    public function removeCart(Cart $cart): static
+    {
+        $this->carts->removeElement($cart);
+        $this->updatedAt = new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CartHistory>
+     */
+    public function getCartHistories(): Collection
+    {
+        return $this->cartHistories;
+    }
+
+    public function addCartHistory(CartHistory $cartHistory): static
+    {
+        if (!$this->cartHistories->contains($cartHistory)) {
+            $this->cartHistories->add($cartHistory);
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+
+        return $this;
+    }
+
+    public function removeCartHistory(CartHistory $cartHistory): static
+    {
+        $this->cartHistories->removeElement($cartHistory);
+        $this->updatedAt = new \DateTimeImmutable();
 
         return $this;
     }

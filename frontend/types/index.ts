@@ -7,6 +7,7 @@ export interface Account {
   updatedAt: string | null
 }
 
+
 export interface ApiResponse<T> {
   success: boolean
   data: T
