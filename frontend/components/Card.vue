@@ -6,19 +6,38 @@
       <h3>{{ book?.titre }}</h3>
     </div>
     <div class="card-separator">
-      <button class="detail-button">Détail</button>
+      <button class="detail-button" @click="goToDetail">Détail</button>
     </div>
   </div>
 </template>
 
 <script setup>
 // Définition des props
+import { useRouter } from 'vue-router'
+
 const props = defineProps({
   book: {
     type: Object,
     default: () => ({})
   }
 });
+
+const router = useRouter()
+
+const goToDetail = () => {
+  const b = props.book || {}
+  router.push({
+    path: '/Book-Detail',
+    query: {
+      titre: b.titre || '',
+      auteur: b.auteur || '',
+      categorie: b.categorie || '',
+      image: b.image || '',
+      resume: b.resume || '',
+      unitPrice: b.unitPrice != null ? String(b.unitPrice) : ''
+    }
+  })
+}
 
 
 </script>

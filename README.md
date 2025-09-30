@@ -2,8 +2,6 @@
 
 > Plateforme de management de livres moderne avec Nuxt.js et Symfony
 
-[![Security Scan](https://github.com/username/Nuxt-Symfony-Library/workflows/Security%20&%20Quality%20Checks/badge.svg)](https://github.com/username/Nuxt-Symfony-Library/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 🏗️ Architecture
 

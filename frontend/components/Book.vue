@@ -39,13 +39,16 @@
       </div>
     </div>
   </div>
-</template><script setup lang="ts">
-import type { Book as BookType } from '../composables/useBooks';
+</template><script setup>
+defineProps({
+  book: {
+    type: Object,
+    default: () => ({})
+  }
+});
 
-defineProps<{ book: BookType }>();
-
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
+const handleImageError = (event) => {
+  const img = event.target;
   img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDIwMCAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgOTZDMTA2LjYyNyA5NiAxMTIgOTAuNjI3NCAxMTIgODRDMTEyIDc3LjM3MjYgMTA2LjYyNyA3MiAxMDAgNzJDOTMuMzcyNiA3MiA4OCA3Ny4zNzI2IDg4IDg0Qzg4IDkwLjYyNzQgOTMuMzcyNiA5NiAxMDAgOTZaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNjAgMTQ0SDQwVjEyOEw2NCA5NkwxMDAgMTI4TDE0NCAxMDRMMTYwIDEyOFYxNDRaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPgo=';
   img.alt = 'Image non disponible';
 };
