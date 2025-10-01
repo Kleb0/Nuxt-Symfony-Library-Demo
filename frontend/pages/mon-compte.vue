@@ -82,7 +82,6 @@ const user = ref<User>({
 const loading = ref(true)
 const error = ref('')
 
-// Utiliser l'injection pour récupérer l'utilisateur connecté
 const currentUser = inject('currentUser', ref(null)) as any
 
 function getImageSrc(imageProfil: string) {
