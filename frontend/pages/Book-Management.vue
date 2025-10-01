@@ -238,547 +238,54 @@
         </div>
     </div>
 
-    <!-- Modal de modification -->
-    <div v-if="showEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Modifier le livre</h3>
-                
-                <form @submit.prevent="saveBook" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Titre -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-                            <input
-                                v-model="editForm.titre"
-                                type="text"
-                                required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
+    <!-- Composant modal de modification de livre -->
+    <ModifyBookModal
+        :show="showEditModal"
+        :book="editingBook"
+        :authors="authors"
+        :categories="categories"
+        @close="closeEditModal"
+        @book-updated="onBookUpdated"
+    />
 
-                        <!-- Prix -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Prix *</label>
-                            <input
-                                v-model="editForm.prix"
-                                type="number"
-                                step="0.01"
-                                required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
+    <!-- Composant modal de modification d'auteur -->
+    <AuthorModificationModal
+        :show="showEditAuthorModal"
+        :author="editingAuthor"
+        @close="closeEditAuthorModal"
+        @author-updated="onAuthorUpdated"
+    />
 
-                        <!-- Stock -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Stock *</label>
-                            <input
-                                v-model="editForm.stock"
-                                type="number"
-                                required
-                                min="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
+    <!-- Composant modal de modification de catégorie -->
+    <CategoryModifyModal
+        :show="showEditCategoryModal"
+        :category="editingCategory"
+        @close="closeEditCategoryModal"
+        @category-updated="onCategoryUpdated"
+    />
 
-                        <!-- ISBN -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
-                            <input
-                                v-model="editForm.isbn"
-                                type="text"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
+    <!-- Composant modal de création de livre -->
+    <BookCreationModal
+        :show="showCreateBookModal"
+        :authors="authors"
+        :categories="categories"
+        @close="closeCreateBookModal"
+        @book-created="onBookCreated"
+    />
 
-                        <!-- Date de publication -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Date de publication</label>
-                            <input
-                                v-model="editForm.datePublication"
-                                type="date"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
+    <!-- Composant modal de création d'auteur -->
+    <AuthorCreationModal
+        :show="showCreateAuthorModal"
+        @close="closeCreateAuthorModal"
+        @author-created="onAuthorCreated"
+    />
 
-                        <!-- Nombre de pages -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de pages</label>
-                            <input
-                                v-model="editForm.nombrePages"
-                                type="number"
-                                min="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea
-                            v-model="editForm.description"
-                            rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        ></textarea>
-                    </div>
-
-                    <!-- Auteurs -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Auteurs</label>
-                        <select
-                            v-model="editForm.authors"
-                            multiple
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                        >
-                            <option 
-                                v-for="author in authors" 
-                                :key="author.id" 
-                                :value="author.id"
-                            >
-                                {{ author.fullName }}
-                            </option>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs auteurs</p>
-                    </div>
-
-                    <!-- Catégories -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Catégories</label>
-                        <select
-                            v-model="editForm.categories"
-                            multiple
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                        >
-                            <option 
-                                v-for="category in categories" 
-                                :key="category.id" 
-                                :value="category.id"
-                            >
-                                {{ category.name }}
-                            </option>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs catégories</p>
-                    </div>
-
-                    <!-- Boutons -->
-                    <div class="flex justify-end space-x-3 pt-4">
-                        <button
-                            type="button"
-                            @click="closeEditModal"
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            type="submit"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                            Sauvegarder
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de modification des auteurs -->
-    <div v-if="showEditAuthorModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Modifier l'auteur</h3>
-                
-                <form @submit.prevent="saveAuthor" class="space-y-4">
-                    <!-- Prénom -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
-                        <input
-                            v-model="editAuthorForm.firstName"
-                            type="text"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <!-- Nom -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                        <input
-                            v-model="editAuthorForm.lastName"
-                            type="text"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <!-- Nationalité -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nationalité</label>
-                        <input
-                            v-model="editAuthorForm.nationality"
-                            type="text"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <!-- Date de naissance -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
-                        <input
-                            v-model="editAuthorForm.birthDate"
-                            type="date"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <!-- Boutons -->
-                    <div class="flex justify-end space-x-3 pt-4">
-                        <button
-                            type="button"
-                            @click="closeEditAuthorModal"
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            type="submit"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                            Sauvegarder
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de modification des catégories -->
-    <div v-if="showEditCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Modifier la catégorie</h3>
-                
-                <form @submit.prevent="saveCategory" class="space-y-4">
-                    <!-- Nom -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                        <input
-                            v-model="editCategoryForm.name"
-                            type="text"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea
-                            v-model="editCategoryForm.description"
-                            rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        ></textarea>
-                    </div>
-
-                    <!-- Boutons -->
-                    <div class="flex justify-end space-x-3 pt-4">
-                        <button
-                            type="button"
-                            @click="closeEditCategoryModal"
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            type="submit"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                            Sauvegarder
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de création de livre -->
-    <div v-if="showCreateBookModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Créer un nouveau livre</h3>
-                <button
-                    @click="closeCreateBookModal"
-                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <form @submit.prevent="createBook" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Titre *</label>
-                        <input
-                            v-model="createBookForm.titre"
-                            type="text"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Prix *</label>
-                        <input
-                            v-model="createBookForm.prix"
-                            type="number"
-                            step="0.01"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Stock *</label>
-                        <input
-                            v-model="createBookForm.stock"
-                            type="number"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
-                        <input
-                            v-model="createBookForm.isbn"
-                            type="text"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Date de publication</label>
-                        <input
-                            v-model="createBookForm.datePublication"
-                            type="date"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de pages</label>
-                        <input
-                            v-model="createBookForm.nombrePages"
-                            type="number"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea
-                        v-model="createBookForm.description"
-                        rows="4"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    ></textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Image du livre</label>
-                    <div class="space-y-2">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            @change="handleCreateImageSelect"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        />
-                        <p class="text-xs text-gray-500">Formats acceptés : JPG, PNG, GIF. Taille max : 5MB</p>
-                        <div v-if="createBookImageFile" class="text-sm text-green-600">
-                            ✓ Image sélectionnée : {{ createBookImageFile.name }}
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Auteurs</label>
-                        <select
-                            v-model="createBookForm.authors"
-                            multiple
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
-                        >
-                            <option v-for="author in authors" :key="author.id" :value="author.id">
-                                {{ author.fullName }}
-                            </option>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Maintenez Ctrl/Cmd pour sélectionner plusieurs auteurs</p>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Catégories</label>
-                        <select
-                            v-model="createBookForm.categories"
-                            multiple
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
-                        >
-                            <option v-for="category in categories" :key="category.id" :value="category.id">
-                                {{ category.name }}
-                            </option>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Maintenez Ctrl/Cmd pour sélectionner plusieurs catégories</p>
-                    </div>
-                </div>
-                
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button
-                        type="button"
-                        @click="closeCreateBookModal"
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                    >
-                        Annuler
-                    </button>
-                    <button
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                        Créer
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal de création d'auteur -->
-    <div v-if="showCreateAuthorModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Créer un nouvel auteur</h3>
-                <button
-                    @click="closeCreateAuthorModal"
-                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <form @submit.prevent="createAuthor" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
-                        <input
-                            v-model="createAuthorForm.firstName"
-                            type="text"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
-                        <input
-                            v-model="createAuthorForm.lastName"
-                            type="text"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nationalité</label>
-                        <input
-                            v-model="createAuthorForm.nationality"
-                            type="text"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
-                        <input
-                            v-model="createAuthorForm.birthDate"
-                            type="date"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                    </div>
-                </div>
-                
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button
-                        type="button"
-                        @click="closeCreateAuthorModal"
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                    >
-                        Annuler
-                    </button>
-                    <button
-                        type="submit"
-                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                    >
-                        Créer
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal de création de catégorie -->
-    <div v-if="showCreateCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Créer une nouvelle catégorie</h3>
-                <button
-                    @click="closeCreateCategoryModal"
-                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <form @submit.prevent="createCategory" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
-                    <input
-                        v-model="createCategoryForm.name"
-                        type="text"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea
-                        v-model="createCategoryForm.description"
-                        rows="4"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    ></textarea>
-                </div>
-                
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button
-                        type="button"
-                        @click="closeCreateCategoryModal"
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-                    >
-                        Annuler
-                    </button>
-                    <button
-                        type="submit"
-                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                    >
-                        Créer
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- Composant modal de création de catégorie -->
+    <CategoryCreateModal
+        :show="showCreateCategoryModal"
+        @close="closeCreateCategoryModal"
+        @category-created="onCategoryCreated"
+    />
 </template>
 
 <script setup lang="ts">
@@ -809,66 +316,19 @@ const uploadingImages = ref(new Set<number>())
 // États pour gérer les modals de modification
 const showEditModal = ref(false)
 const editingBook = ref<Book | null>(null)
-const editForm = ref({
-  titre: '',
-  description: '',
-  prix: '',
-  stock: 0,
-  isbn: '',
-  datePublication: '' as string | undefined,
-  nombrePages: 0,
-  authors: [] as number[],
-  categories: [] as number[]
-})
 
 // États pour gérer les modals de création
 const showCreateBookModal = ref(false)
 const showCreateAuthorModal = ref(false)
 const showCreateCategoryModal = ref(false)
 
-const createBookForm = ref({
-  titre: '',
-  description: '',
-  prix: '',
-  stock: 0,
-  isbn: '',
-  datePublication: '' as string | undefined,
-  nombrePages: 0,
-  authors: [] as number[],
-  categories: [] as number[]
-})
-
-const createBookImageFile = ref<File | null>(null)
-
-const createAuthorForm = ref({
-  firstName: '',
-  lastName: '',
-  nationality: '',
-  birthDate: '' as string | undefined
-})
-
-const createCategoryForm = ref({
-  name: '',
-  description: ''
-})
-
 // États pour les modals d'auteurs
 const showEditAuthorModal = ref(false)
 const editingAuthor = ref<Author | null>(null)
-const editAuthorForm = ref({
-  firstName: '',
-  lastName: '',
-  nationality: '',
-  birthDate: '' as string | undefined
-})
 
 // États pour les modals de catégories
 const showEditCategoryModal = ref(false)
 const editingCategory = ref<Category | null>(null)
-const editCategoryForm = ref({
-  name: '',
-  description: ''
-})
 
 // Fonction utilitaire pour formater les dates
 const formatDate = (date: string | null | undefined): string => {
@@ -893,17 +353,6 @@ const triggerFileInput = (bookId: number) => {
 // Fonction pour ouvrir le modal de modification
 const openEditModal = (book: Book) => {
   editingBook.value = book
-  editForm.value = {
-    titre: book.titre,
-    description: book.description || '',
-    prix: book.prix,
-    stock: book.stock,
-    isbn: book.isbn || '',
-    datePublication: (book.datePublication && typeof book.datePublication === 'string') ? book.datePublication.split('T')[0] : '',
-    nombrePages: book.nombrePages || 0,
-    authors: book.authors.map(author => author.id),
-    categories: book.categories.map(category => category.id)
-  }
   showEditModal.value = true
 }
 
@@ -913,20 +362,13 @@ const closeEditModal = () => {
   editingBook.value = null
 }
 
+// Fonction appelée quand un livre est modifié depuis le modal
+const onBookUpdated = async () => {
+  await fetchBooks()
+}
+
 // Fonctions pour les modals de création
 const openCreateBookModal = () => {
-  createBookForm.value = {
-    titre: '',
-    description: '',
-    prix: '',
-    stock: 0,
-    isbn: '',
-    datePublication: '',
-    nombrePages: 0,
-    authors: [],
-    categories: []
-  }
-  createBookImageFile.value = null
   showCreateBookModal.value = true
 }
 
@@ -934,13 +376,12 @@ const closeCreateBookModal = () => {
   showCreateBookModal.value = false
 }
 
+// Fonction appelée quand un livre est créé depuis le modal
+const onBookCreated = async () => {
+  await fetchBooks()
+}
+
 const openCreateAuthorModal = () => {
-  createAuthorForm.value = {
-    firstName: '',
-    lastName: '',
-    nationality: '',
-    birthDate: ''
-  }
   showCreateAuthorModal.value = true
 }
 
@@ -949,10 +390,6 @@ const closeCreateAuthorModal = () => {
 }
 
 const openCreateCategoryModal = () => {
-  createCategoryForm.value = {
-    name: '',
-    description: ''
-  }
   showCreateCategoryModal.value = true
 }
 
@@ -960,50 +397,9 @@ const closeCreateCategoryModal = () => {
   showCreateCategoryModal.value = false
 }
 
-// Fonction pour gérer la sélection d'image lors de la création
-const handleCreateImageSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  
-  if (!file) {
-    createBookImageFile.value = null
-    return
-  }
-  
-  // Vérifier le type de fichier
-  if (!file.type.startsWith('image/')) {
-    alert('Veuillez sélectionner un fichier image valide')
-    target.value = ''
-    createBookImageFile.value = null
-    return
-  }
-  
-  // Vérifier la taille du fichier (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('Le fichier est trop volumineux. Taille maximale : 5MB')
-    target.value = ''
-    createBookImageFile.value = null
-    return
-  }
-  
-  createBookImageFile.value = file
-}
-
 // Fonctions pour les auteurs
 const openEditAuthorModal = (author: Author) => {
   editingAuthor.value = author
-  
-  // Séparer le fullName en firstName et lastName
-  const names = author.fullName.trim().split(' ')
-  const firstName = names[0] || ''
-  const lastName = names.slice(1).join(' ') || ''
-  
-  editAuthorForm.value = {
-    firstName: firstName,
-    lastName: lastName,
-    nationality: author.nationality || '',
-    birthDate: (author.birthDate && typeof author.birthDate === 'string') ? author.birthDate.split('T')[0] : ''
-  }
   showEditAuthorModal.value = true
 }
 
@@ -1012,13 +408,14 @@ const closeEditAuthorModal = () => {
   editingAuthor.value = null
 }
 
+// Fonction appelée quand un auteur est modifié depuis le modal
+const onAuthorUpdated = async () => {
+  await fetchAuthors()
+}
+
 // Fonctions pour les catégories
 const openEditCategoryModal = (category: Category) => {
   editingCategory.value = category
-  editCategoryForm.value = {
-    name: category.name,
-    description: category.description || ''
-  }
   showEditCategoryModal.value = true
 }
 
@@ -1027,288 +424,19 @@ const closeEditCategoryModal = () => {
   editingCategory.value = null
 }
 
-// Fonction pour sauvegarder les modifications
-const saveBook = async () => {
-  if (!editingBook.value) return
-  
-  try {
-    const updateData = {
-      titre: editForm.value.titre,
-      description: editForm.value.description,
-      prix: String(editForm.value.prix),
-      stock: editForm.value.stock,
-      isbn: editForm.value.isbn,
-      datePublication: editForm.value.datePublication || null,
-      nombrePages: editForm.value.nombrePages || null,
-      authors: editForm.value.authors.map(id => `/api/authors/${id}`),
-      categories: editForm.value.categories.map(id => `/api/categories/${id}`),
-      image: editingBook.value.image 
-    }
-    
-    await $fetch(`${baseURL}/books/${editingBook.value.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      },
-      body: JSON.stringify(updateData)
-    })
-    
-    // Recharger les livres pour afficher les modifications
-    await fetchBooks()
-    closeEditModal()
-    
-    alert('Livre modifié avec succès !')
-  } catch (error: any) {
-    console.error('Erreur lors de la modification:', error)
-    console.error('Détails de l\'erreur:', error.data)
-    
-    let errorMessage = 'Erreur lors de la modification du livre'
-    if (error.data && error.data.detail) {
-      errorMessage = error.data.detail
-    } else if (error.data && error.data.error) {
-      errorMessage = error.data.error
-    }
-    
-    alert(errorMessage)
-  }
+// Fonction appelée quand une catégorie est modifiée depuis le modal
+const onCategoryUpdated = async () => {
+  await fetchCategories()
 }
 
-// Fonction pour sauvegarder les modifications d'auteur
-const saveAuthor = async () => {
-  if (!editingAuthor.value) return
-  
-  try {
-    const updateData = {
-      firstName: editAuthorForm.value.firstName,
-      lastName: editAuthorForm.value.lastName,
-      nationality: editAuthorForm.value.nationality || null,
-      birthDate: editAuthorForm.value.birthDate || null
-    }
-    
-    console.log('Données à envoyer pour l\'auteur:', updateData)
-    console.log('Auteur en cours de modification:', editingAuthor.value)
-    
-    const response = await $fetch(`${baseURL}/authors/${editingAuthor.value.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      },
-      body: JSON.stringify(updateData)
-    })
-    
-    console.log('Réponse de l\'API pour l\'auteur:', response)
-    
-    // Recharger les auteurs pour afficher les modifications
-    await fetchAuthors()
-    closeEditAuthorModal()
-    
-    alert('Auteur modifié avec succès !')
-  } catch (error: any) {
-    console.error('Erreur lors de la modification de l\'auteur:', error)
-    console.error('Détails de l\'erreur:', error.data)
-    
-    let errorMessage = 'Erreur lors de la modification de l\'auteur'
-    if (error.data && error.data.detail) {
-      errorMessage = error.data.detail
-    } else if (error.data && error.data.error) {
-      errorMessage = error.data.error
-    }
-    
-    alert(errorMessage)
-  }
+// Fonction appelée quand un auteur est créé depuis le modal
+const onAuthorCreated = async () => {
+  await fetchAuthors()
 }
 
-// Fonction pour sauvegarder les modifications de catégorie
-const saveCategory = async () => {
-  if (!editingCategory.value) return
-  
-  try {
-    const updateData = {
-      name: editCategoryForm.value.name,
-      description: editCategoryForm.value.description || null
-    }
-    
-    await $fetch(`${baseURL}/categories/${editingCategory.value.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      },
-      body: JSON.stringify(updateData)
-    })
-    
-    // Recharger les catégories pour afficher les modifications
-    await fetchCategories()
-    closeEditCategoryModal()
-    
-    alert('Catégorie modifiée avec succès !')
-  } catch (error: any) {
-    console.error('Erreur lors de la modification de la catégorie:', error)
-    
-    let errorMessage = 'Erreur lors de la modification de la catégorie'
-    if (error.data && error.data.detail) {
-      errorMessage = error.data.detail
-    } else if (error.data && error.data.error) {
-      errorMessage = error.data.error
-    }
-    
-    alert(errorMessage)
-  }
-}
-
-// Fonctions de création
-const createBook = async () => {
-  try {
-    const createData = {
-      titre: createBookForm.value.titre,
-      description: createBookForm.value.description || null,
-      prix: String(createBookForm.value.prix),
-      stock: createBookForm.value.stock,
-      isbn: createBookForm.value.isbn || null,
-      datePublication: createBookForm.value.datePublication || null,
-      nombrePages: createBookForm.value.nombrePages || null,
-      authors: createBookForm.value.authors.map(id => `/api/authors/${id}`),
-      categories: createBookForm.value.categories.map(id => `/api/categories/${id}`)
-    }
-    
-    console.log('Données à envoyer pour le livre:', createData)
-    console.log('Authors sélectionnés:', createBookForm.value.authors)
-    console.log('Categories sélectionnées:', createBookForm.value.categories)
-    
-    const response = await fetch(`${baseURL}/books`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      },
-      body: JSON.stringify(createData)
-    })
-    
-    console.log('Status de la réponse:', response.status)
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Erreur détaillée du serveur:', errorText)
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
-    }
-    
-    const bookData = await response.json()
-    
-    // Si une image a été sélectionnée, l'uploader
-    if (createBookImageFile.value && bookData.id) {
-      try {
-        const formData = new FormData()
-        formData.append('image', createBookImageFile.value)
-        
-        await $fetch(`${baseURL}/books/${bookData.id}/upload-image`, {
-          method: 'POST',
-          body: formData
-        })
-      } catch (imageError: any) {
-        console.error('Erreur lors de l\'upload de l\'image:', imageError)
-        // On n'interrompt pas le processus si l'image échoue
-        alert('Livre créé avec succès, mais erreur lors de l\'upload de l\'image')
-      }
-    }
-    
-    // Recharger les livres pour afficher le nouveau livre
-    await fetchBooks()
-    closeCreateBookModal()
-    
-    alert('Livre créé avec succès !')
-  } catch (error: any) {
-    console.error('Erreur lors de la création du livre:', error)
-    
-    let errorMessage = 'Erreur lors de la création du livre'
-    if (error.message) {
-      errorMessage = error.message
-    }
-    
-    alert(errorMessage)
-  }
-}
-
-const createAuthor = async () => {
-  try {
-    const createData = {
-      firstName: createAuthorForm.value.firstName,
-      lastName: createAuthorForm.value.lastName,
-      nationality: createAuthorForm.value.nationality || null,
-      birthDate: createAuthorForm.value.birthDate || null
-    }
-    
-    const response = await fetch(`${baseURL}/authors`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      },
-      body: JSON.stringify(createData)
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    // Recharger les auteurs pour afficher le nouvel auteur
-    await fetchAuthors()
-    closeCreateAuthorModal()
-    
-    alert('Auteur créé avec succès !')
-  } catch (error: any) {
-    console.error('Erreur lors de la création de l\'auteur:', error)
-    
-    let errorMessage = 'Erreur lors de la création de l\'auteur'
-    if (error.message) {
-      errorMessage = error.message
-    }
-    
-    alert(errorMessage)
-  }
-}
-
-const createCategory = async () => {
-  try {
-    const createData = {
-      name: createCategoryForm.value.name,
-      description: createCategoryForm.value.description || null
-    }
-    
-    console.log('Données à envoyer pour la catégorie:', createData)
-    console.log('URL:', `${baseURL}/categories`)
-    console.log('Content-Type qui sera envoyé: application/ld+json')
-    
-    const response = await fetch(`${baseURL}/categories`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json'
-      },
-      body: JSON.stringify(createData)
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    // Recharger les catégories pour afficher la nouvelle catégorie
-    await fetchCategories()
-    closeCreateCategoryModal()
-    
-    alert('Catégorie créée avec succès !')
-  } catch (error: any) {
-    console.error('Erreur lors de la création de la catégorie:', error)
-    console.error('Erreur complète:', error)
-    
-    let errorMessage = 'Erreur lors de la création de la catégorie'
-    if (error.message) {
-      errorMessage = error.message
-    }
-    
-    alert(errorMessage)
-  }
+// Fonction appelée quand une catégorie est créée depuis le modal
+const onCategoryCreated = async () => {
+  await fetchCategories()
 }
 
 // Fonctions de suppression
@@ -1521,4 +649,3 @@ onMounted(async () => {
   ])
 })
 </script>
-
