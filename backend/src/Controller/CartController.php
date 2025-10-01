@@ -113,11 +113,9 @@ class CartController extends AbstractController
             $totalPrice += $itemTotal;
         }
 
-        // Mettre à jour le prix total du panier dans la base de données
         $activeCart->setTotalPrice((string) $totalPrice);
         $this->entityManager->flush();
 
-        // Retourner les items directement (pas d'objet wrapper)
         return new JsonResponse($items);
     }
 

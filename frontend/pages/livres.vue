@@ -71,17 +71,22 @@ const filteredBooks = computed(() => {
 const fetchBooks = async () => {
   try {
     const response = await $fetch('http://127.0.0.1:8000/api/books')
-    if (response && response['hydra:member']) {
-      books.value = response['hydra:member']
-    } else if (response && response.member) {
+    console.log('API Response:', response)
+    
+    if (response && response.member) {
       books.value = response.member
+    } else if (response && response['hydra:member']) {
+      books.value = response['hydra:member']
     } else if (Array.isArray(response)) {
       books.value = response
     } else {
       books.value = []
     }
+    
     books.value = books.value.filter(book => typeof book === 'object' && book !== null)
+    console.log('Books loaded:', books.value.length) // Pour débugger
   } catch (error) {
+    console.error('Erreur lors du chargement des livres:', error)
     books.value = []
   }
 }
