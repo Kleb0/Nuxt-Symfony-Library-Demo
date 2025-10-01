@@ -95,7 +95,12 @@
                                     >
                                         Modifier
                                     </button>
-                                    <button class="text-red-600 hover:text-red-900">Supprimer</button>
+                                    <button 
+                                        @click="deleteBook(book)"
+                                        class="text-red-600 hover:text-red-900"
+                                    >
+                                        Supprimer
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -136,8 +141,18 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ author.nationality || 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(author.birthDate) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">Modifier</button>
-                                    <button class="text-red-600 hover:text-red-900">Supprimer</button>
+                                    <button 
+                                        @click="openEditAuthorModal(author)"
+                                        class="text-indigo-600 hover:text-indigo-900 mr-3"
+                                    >
+                                        Modifier
+                                    </button>
+                                    <button 
+                                        @click="deleteAuthor(author)"
+                                        class="text-red-600 hover:text-red-900"
+                                    >
+                                        Supprimer
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -178,8 +193,18 @@
                                 <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{{ category.description || 'Aucune description' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(category.createdAt) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">Modifier</button>
-                                    <button class="text-red-600 hover:text-red-900">Supprimer</button>
+                                    <button 
+                                        @click="openEditCategoryModal(category)"
+                                        class="text-indigo-600 hover:text-indigo-900 mr-3"
+                                    >
+                                        Modifier
+                                    </button>
+                                    <button 
+                                        @click="deleteCategory(category)"
+                                        class="text-red-600 hover:text-red-900"
+                                    >
+                                        Supprimer
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -332,6 +357,125 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de modification des auteurs -->
+    <div v-if="showEditAuthorModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Modifier l'auteur</h3>
+                
+                <form @submit.prevent="saveAuthor" class="space-y-4">
+                    <!-- Prénom -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
+                        <input
+                            v-model="editAuthorForm.firstName"
+                            type="text"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <!-- Nom -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                        <input
+                            v-model="editAuthorForm.lastName"
+                            type="text"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <!-- Nationalité -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nationalité</label>
+                        <input
+                            v-model="editAuthorForm.nationality"
+                            type="text"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <!-- Date de naissance -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
+                        <input
+                            v-model="editAuthorForm.birthDate"
+                            type="date"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <!-- Boutons -->
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button
+                            type="button"
+                            @click="closeEditAuthorModal"
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                            Sauvegarder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de modification des catégories -->
+    <div v-if="showEditCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Modifier la catégorie</h3>
+                
+                <form @submit.prevent="saveCategory" class="space-y-4">
+                    <!-- Nom -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                        <input
+                            v-model="editCategoryForm.name"
+                            type="text"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea
+                            v-model="editCategoryForm.description"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        ></textarea>
+                    </div>
+
+                    <!-- Boutons -->
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button
+                            type="button"
+                            @click="closeEditCategoryModal"
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                            Sauvegarder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -372,6 +516,24 @@ const editForm = ref({
   nombrePages: 0,
   authors: [] as number[],
   categories: [] as number[]
+})
+
+// États pour les modals d'auteurs
+const showEditAuthorModal = ref(false)
+const editingAuthor = ref<Author | null>(null)
+const editAuthorForm = ref({
+  firstName: '',
+  lastName: '',
+  nationality: '',
+  birthDate: '' as string | undefined
+})
+
+// États pour les modals de catégories
+const showEditCategoryModal = ref(false)
+const editingCategory = ref<Category | null>(null)
+const editCategoryForm = ref({
+  name: '',
+  description: ''
 })
 
 // Fonction utilitaire pour formater les dates
@@ -417,6 +579,44 @@ const closeEditModal = () => {
   editingBook.value = null
 }
 
+// Fonctions pour les auteurs
+const openEditAuthorModal = (author: Author) => {
+  editingAuthor.value = author
+  
+  // Séparer le fullName en firstName et lastName
+  const names = author.fullName.trim().split(' ')
+  const firstName = names[0] || ''
+  const lastName = names.slice(1).join(' ') || ''
+  
+  editAuthorForm.value = {
+    firstName: firstName,
+    lastName: lastName,
+    nationality: author.nationality || '',
+    birthDate: (author.birthDate && typeof author.birthDate === 'string') ? author.birthDate.split('T')[0] : ''
+  }
+  showEditAuthorModal.value = true
+}
+
+const closeEditAuthorModal = () => {
+  showEditAuthorModal.value = false
+  editingAuthor.value = null
+}
+
+// Fonctions pour les catégories
+const openEditCategoryModal = (category: Category) => {
+  editingCategory.value = category
+  editCategoryForm.value = {
+    name: category.name,
+    description: category.description || ''
+  }
+  showEditCategoryModal.value = true
+}
+
+const closeEditCategoryModal = () => {
+  showEditCategoryModal.value = false
+  editingCategory.value = null
+}
+
 // Fonction pour sauvegarder les modifications
 const saveBook = async () => {
   if (!editingBook.value) return
@@ -454,6 +654,172 @@ const saveBook = async () => {
     console.error('Détails de l\'erreur:', error.data)
     
     let errorMessage = 'Erreur lors de la modification du livre'
+    if (error.data && error.data.detail) {
+      errorMessage = error.data.detail
+    } else if (error.data && error.data.error) {
+      errorMessage = error.data.error
+    }
+    
+    alert(errorMessage)
+  }
+}
+
+// Fonction pour sauvegarder les modifications d'auteur
+const saveAuthor = async () => {
+  if (!editingAuthor.value) return
+  
+  try {
+    const updateData = {
+      firstName: editAuthorForm.value.firstName,
+      lastName: editAuthorForm.value.lastName,
+      nationality: editAuthorForm.value.nationality || null,
+      birthDate: editAuthorForm.value.birthDate || null
+    }
+    
+    console.log('Données à envoyer pour l\'auteur:', updateData)
+    console.log('Auteur en cours de modification:', editingAuthor.value)
+    
+    const response = await $fetch(`${baseURL}/authors/${editingAuthor.value.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      },
+      body: JSON.stringify(updateData)
+    })
+    
+    console.log('Réponse de l\'API pour l\'auteur:', response)
+    
+    // Recharger les auteurs pour afficher les modifications
+    await fetchAuthors()
+    closeEditAuthorModal()
+    
+    alert('Auteur modifié avec succès !')
+  } catch (error: any) {
+    console.error('Erreur lors de la modification de l\'auteur:', error)
+    console.error('Détails de l\'erreur:', error.data)
+    
+    let errorMessage = 'Erreur lors de la modification de l\'auteur'
+    if (error.data && error.data.detail) {
+      errorMessage = error.data.detail
+    } else if (error.data && error.data.error) {
+      errorMessage = error.data.error
+    }
+    
+    alert(errorMessage)
+  }
+}
+
+// Fonction pour sauvegarder les modifications de catégorie
+const saveCategory = async () => {
+  if (!editingCategory.value) return
+  
+  try {
+    const updateData = {
+      name: editCategoryForm.value.name,
+      description: editCategoryForm.value.description || null
+    }
+    
+    await $fetch(`${baseURL}/categories/${editingCategory.value.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      },
+      body: JSON.stringify(updateData)
+    })
+    
+    // Recharger les catégories pour afficher les modifications
+    await fetchCategories()
+    closeEditCategoryModal()
+    
+    alert('Catégorie modifiée avec succès !')
+  } catch (error: any) {
+    console.error('Erreur lors de la modification de la catégorie:', error)
+    
+    let errorMessage = 'Erreur lors de la modification de la catégorie'
+    if (error.data && error.data.detail) {
+      errorMessage = error.data.detail
+    } else if (error.data && error.data.error) {
+      errorMessage = error.data.error
+    }
+    
+    alert(errorMessage)
+  }
+}
+
+// Fonctions de suppression
+const deleteBook = async (book: Book) => {
+  if (!confirm(`Êtes-vous sûr de vouloir supprimer le livre "${book.titre}" ? Cette action est irréversible.`)) {
+    return
+  }
+
+  try {
+    await $fetch(`${baseURL}/books/${book.id}`, {
+      method: 'DELETE'
+    })
+
+    // Recharger les livres pour afficher les modifications
+    await fetchBooks()
+    alert('Livre supprimé avec succès !')
+  } catch (error: any) {
+    console.error('Erreur lors de la suppression du livre:', error)
+    
+    let errorMessage = 'Erreur lors de la suppression du livre'
+    if (error.data && error.data.detail) {
+      errorMessage = error.data.detail
+    } else if (error.data && error.data.error) {
+      errorMessage = error.data.error
+    }
+    
+    alert(errorMessage)
+  }
+}
+
+const deleteAuthor = async (author: Author) => {
+  if (!confirm(`Êtes-vous sûr de vouloir supprimer l'auteur "${author.fullName}" ? Cette action est irréversible.`)) {
+    return
+  }
+
+  try {
+    await $fetch(`${baseURL}/authors/${author.id}`, {
+      method: 'DELETE'
+    })
+
+    // Recharger les auteurs pour afficher les modifications
+    await fetchAuthors()
+    alert('Auteur supprimé avec succès !')
+  } catch (error: any) {
+    console.error('Erreur lors de la suppression de l\'auteur:', error)
+    
+    let errorMessage = 'Erreur lors de la suppression de l\'auteur'
+    if (error.data && error.data.detail) {
+      errorMessage = error.data.detail
+    } else if (error.data && error.data.error) {
+      errorMessage = error.data.error
+    }
+    
+    alert(errorMessage)
+  }
+}
+
+const deleteCategory = async (category: Category) => {
+  if (!confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${category.name}" ? Cette action est irréversible.`)) {
+    return
+  }
+
+  try {
+    await $fetch(`${baseURL}/categories/${category.id}`, {
+      method: 'DELETE'
+    })
+
+    // Recharger les catégories pour afficher les modifications
+    await fetchCategories()
+    alert('Catégorie supprimée avec succès !')
+  } catch (error: any) {
+    console.error('Erreur lors de la suppression de la catégorie:', error)
+    
+    let errorMessage = 'Erreur lors de la suppression de la catégorie'
     if (error.data && error.data.detail) {
       errorMessage = error.data.detail
     } else if (error.data && error.data.error) {
