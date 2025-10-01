@@ -21,6 +21,7 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Auteurs</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégories</th>
@@ -32,6 +33,42 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             <tr v-for="book in books" :key="book.id" class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ book.id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex-shrink-0 h-16 w-12">
+                                            <img 
+                                                v-if="book.image" 
+                                                :src="`http://127.0.0.1:8000/${book.image}`" 
+                                                :alt="book.titre"
+                                                class="h-16 w-12 object-cover rounded-md border border-gray-200"
+                                                @error="handleImageError"
+                                            />
+                                            <div 
+                                                v-else 
+                                                class="h-16 w-12 bg-gray-200 rounded-md flex items-center justify-center"
+                                            >
+                                                <span class="text-gray-400 text-xs">📖</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <input 
+                                                :id="`fileInput-${book.id}`"
+                                                type="file" 
+                                                accept="image/*" 
+                                                @change="(event) => handleImageUpload(event, book.id)"
+                                                class="hidden"
+                                            />
+                                            <button 
+                                                @click="triggerFileInput(book.id)"
+                                                class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                                                :disabled="uploadingImages.has(book.id)"
+                                            >
+                                                <span v-if="uploadingImages.has(book.id)">Upload...</span>
+                                                <span v-else>Changer</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ book.titre }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <span v-for="(author, index) in book.authors" :key="author.id">
@@ -147,7 +184,7 @@ import type { Book, Author, Category } from '~/types/index'
 
 // Configuration de la base URL de l'API
 const config = useRuntimeConfig()
-const baseURL = config.public.apiBase || 'http://localhost:8000/api'
+const baseURL = config.public.apiBase || 'http://127.0.0.1:8000/api'
 
 // États réactifs pour les livres
 const books = ref<Book[]>([])
@@ -164,10 +201,95 @@ const categories = ref<Category[]>([])
 const categoriesLoading = ref(true)
 const categoriesError = ref<string | null>(null)
 
+// État pour gérer les uploads d'images
+const uploadingImages = ref(new Set<number>())
+
 // Fonction utilitaire pour formater les dates
 const formatDate = (date: string | null | undefined): string => {
   if (!date) return 'N/A'
   return new Date(date).toLocaleDateString('fr-FR')
+}
+
+// Fonction pour gérer les erreurs d'image
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+}
+
+// Fonction pour déclencher le sélecteur de fichier
+const triggerFileInput = (bookId: number) => {
+  const fileInput = document.getElementById(`fileInput-${bookId}`) as HTMLInputElement
+  if (fileInput) {
+    fileInput.click()
+  }
+}
+
+// Fonction pour gérer l'upload d'image
+const handleImageUpload = async (event: Event, bookId: number) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file) return
+  
+  console.log('Fichier sélectionné:', file.name, file.type, file.size)
+  
+  // Vérifier le type de fichier
+  if (!file.type.startsWith('image/')) {
+    alert('Veuillez sélectionner un fichier image valide')
+    return
+  }
+  
+  // Vérifier la taille du fichier (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Le fichier est trop volumineux. Taille maximale : 5MB')
+    return
+  }
+  
+  try {
+    uploadingImages.value.add(bookId)
+    
+    // Créer FormData pour l'upload
+    const formData = new FormData()
+    formData.append('image', file)
+    
+    console.log('URL d\'upload:', `${baseURL}/books/${bookId}/upload-image`)
+    console.log('FormData créé avec le fichier')
+    
+    // Upload de l'image
+    const response = await $fetch<{ imagePath: string }>(`${baseURL}/books/${bookId}/upload-image`, {
+      method: 'POST',
+      body: formData
+    })
+    
+    console.log('Réponse de l\'API:', response)
+    
+    // Mettre à jour l'image du livre dans la liste
+    const bookIndex = books.value.findIndex(b => b.id === bookId)
+    if (bookIndex !== -1 && books.value[bookIndex]) {
+      books.value[bookIndex].image = response.imagePath
+    }
+    
+    // Réinitialiser l'input file
+    target.value = ''
+    
+    console.log('Image uploadée avec succès:', response.imagePath)
+  } catch (error: any) {
+    console.error('Erreur complète:', error)
+    console.error('Message d\'erreur:', error.message)
+    console.error('Statut:', error.statusCode)
+    console.error('Data:', error.data)
+    
+    let errorMessage = 'Erreur lors de l\'upload de l\'image'
+    if (error.data && error.data.error) {
+      errorMessage = error.data.error
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
+    alert(errorMessage)
+  } finally {
+    uploadingImages.value.delete(bookId)
+  }
 }
 
 // Fonction pour fetcher les livres
