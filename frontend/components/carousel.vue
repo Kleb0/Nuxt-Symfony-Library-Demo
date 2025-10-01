@@ -139,7 +139,7 @@ onUnmounted(() => {
 
 <style scoped>
 .carousel-container {
-  margin: 200px 0 32px 0;
+  background: #ede9d0;
 }
 
 .loading-message,

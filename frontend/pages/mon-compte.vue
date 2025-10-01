@@ -52,7 +52,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
+
+definePageMeta({
+  middleware: 'auth'
+})
 
 interface User {
   id?: number
@@ -78,6 +82,9 @@ const user = ref<User>({
 const loading = ref(true)
 const error = ref('')
 
+// Utiliser l'injection pour récupérer l'utilisateur connecté
+const currentUser = inject('currentUser', ref(null)) as any
+
 function getImageSrc(imageProfil: string) {
   if (!imageProfil) return ''
   
@@ -88,21 +95,28 @@ function getImageSrc(imageProfil: string) {
   return imageProfil
 }
 
-
 onMounted(async () => {
   try {
-    const userId = localStorage.getItem('userId')
-    
-    if (!userId) {
+    if (!currentUser.value?.id) {
       error.value = 'Utilisateur non connecté'
       loading.value = false
       return
     }
 
+    const userId = currentUser.value.id
+    const headers: any = {
+      'Accept': 'application/ld+json',
+      'Content-Type': 'application/json'
+    }
+
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     const response = await $fetch(`http://localhost:8000/api/users/${userId}`, {
-      headers: {
-        'Accept': 'application/ld+json',
-      }
+      headers,
+      credentials: 'include'
     }) as any
 
     if (response) {
@@ -116,11 +130,15 @@ onMounted(async () => {
         adresse: response.adresse,
         imageProfil: response.imageProfil
       }
-      
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Erreur lors de la récupération des données utilisateur:', err)
-    error.value = 'Erreur lors du chargement des données'
+    if (err?.status === 401) {
+      error.value = 'Session expirée, veuillez vous reconnecter'
+      localStorage.removeItem('auth_token')
+    } else {
+      error.value = 'Erreur lors du chargement des données'
+    }
   } finally {
     loading.value = false
   }

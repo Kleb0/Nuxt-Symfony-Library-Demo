@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Command;
+
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+#[AsCommand(
+    name: 'app:list-users',
+    description: 'Liste tous les utilisateurs de la base de données'
+)]
+class ListUsersCommand extends Command
+{
+    private EntityManagerInterface $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+        parent::__construct();
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+
+        $userRepository = $this->entityManager->getRepository(User::class);
+        $users = $userRepository->findAll();
+
+        if (empty($users)) {
+            $io->info('Aucun utilisateur trouvé dans la base de données.');
+            return Command::SUCCESS;
+        }
+
+        $io->section('Liste des utilisateurs :');
+        
+        foreach ($users as $user) {
+            $io->writeln(sprintf('ID: %d | Pseudo: %s | Email: %s | Nom: %s %s', 
+                $user->getId(),
+                $user->getPseudo(),
+                $user->getMail(),
+                $user->getPrenom(),
+                $user->getNom()
+            ));
+            
+            // Afficher les statuses
+            $statuses = [];
+            foreach ($user->getStatuses() as $status) {
+                $statuses[] = sprintf('%s (State: %d)', $status->getStatusName(), $status->getStatusState());
+            }
+            if (!empty($statuses)) {
+                $io->writeln('  Status: ' . implode(', ', $statuses));
+            } else {
+                $io->writeln('  Status: Aucun');
+            }
+            $io->writeln('');
+        }
+
+        return Command::SUCCESS;
+    }
+}

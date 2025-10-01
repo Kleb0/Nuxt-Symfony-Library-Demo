@@ -5,31 +5,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, inject } from 'vue'
 
 const isAdmin = ref(false)
 
-onMounted(async () => {
-  const savedLoginState = localStorage.getItem('isLoggedIn')
-  const savedUserId = localStorage.getItem('userId')
-  if (savedLoginState === 'true' && savedUserId) {
-    try {
-      const user = await $fetch(`http://127.0.0.1:8000/api/users/${savedUserId}`)
-      if (user && Array.isArray(user.statuses)) {
-        isAdmin.value = user.statuses.some(
-          s => s.statusState === 2 
-        )
-      }
-    } catch (e) {
-      isAdmin.value = false
-    }
+const currentUser = inject('currentUser', ref(null))
+
+watch(() => currentUser.value, (newUser) => {
+  if (newUser && Array.isArray(newUser.statuses)) {
+    isAdmin.value = newUser.statuses.some(s => s.status_state === 2)
+  } else {
+    isAdmin.value = false
   }
-})
+}, { immediate: true })
 </script>
 
 <style scoped>
 .management-btn {
-	color: #3b3434;
+	color: #ede9d0;
 	border: none;
 	padding: 10px 24px;
 	border-radius: 10px;

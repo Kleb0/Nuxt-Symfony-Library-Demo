@@ -117,6 +117,9 @@ class User
     #[Groups(['user:read', 'user:write'])]
     private ?int $cart_history_id = null;
 
+    #[Groups(['user:write'])]
+    private ?int $statusState = null;
+
     #[ORM\ManyToMany(targetEntity: Cart::class)]
     #[ORM\JoinTable(
         name: 'user_carts',
@@ -411,12 +414,22 @@ class User
 
     public function getActiveCart(): ?Cart
     {
-        // Retourne le dernier panier (le plus récent) de l'utilisateur
         if ($this->carts->isEmpty()) {
             return null;
         }
         
         return $this->carts->last();
+    }
+
+    public function getStatusState(): ?int
+    {
+        return $this->statusState;
+    }
+
+    public function setStatusState(?int $statusState): static
+    {
+        $this->statusState = $statusState;
+        return $this;
     }
 
     public function __toString(): string

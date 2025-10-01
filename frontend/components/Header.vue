@@ -19,14 +19,18 @@
 </template>
 
 <script setup>
+import { inject } from 'vue'
 import LoginState from './LoginState.vue'
 import PanierButton from './PanierButton.vue'
 import ManagementButton from './ManagementButton.vue'
+
+const currentUser = inject('currentUser')
+const updateCurrentUser = inject('updateCurrentUser')
 </script>
 
 <style scoped>
  .header-title {
-   color: #3b3434;
+   color: #ede9d0;
    font-size: 60px;
    font-weight: bold;
    font-family: 'Roboto', sans-serif !important;
@@ -34,11 +38,10 @@ import ManagementButton from './ManagementButton.vue'
    text-align: center;
  }
 .header-bg {
-  background-color: #DEA54A;
+  background-color: #ff6f49;
   min-height: 380px;
   width: 100%;
   box-shadow: 0 4px 16px 0 rgba(92, 235, 156, 0.15);
-  border-bottom: 2px solid #F6E5CB;
   transition: box-shadow 0.3s;
   display: flex;
   align-items: center;
@@ -55,15 +58,6 @@ import ManagementButton from './ManagementButton.vue'
   flex: 1;
   gap: 32px;
   margin-left: 150px;
-}
-.rectangle {
-  border-radius: 24px;
-  width: 700px;
-  height: 100px;
-  transition: box-shadow 0.3s, border-color 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .loginstate-wrapper {
@@ -86,7 +80,7 @@ import ManagementButton from './ManagementButton.vue'
   border-radius: 24px;
 }
 .menu-item {
-  color: #3b3434;
+  color: #ede9d0;
   font-size: 30px;
   font-family: 'Roboto', sans-serif;
   font-weight: 500;

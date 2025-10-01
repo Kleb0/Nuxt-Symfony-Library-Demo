@@ -63,16 +63,33 @@ const cartItems = ref([])
 
 const loadCart = async () => {
   try {
-    const userId = localStorage.getItem('userId')
-    if (!userId) {
-      cartItems.value = []
-      return
+    const headers = {
+      'Content-Type': 'application/json'
     }
     
-    const response = await $fetch(`http://127.0.0.1:8000/api/cart/user/${userId}`)
-    cartItems.value = response || []
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    const items = await $fetch('http://localhost:8000/api/cart/current-user', {
+      method: 'GET',
+      headers,
+      credentials: 'include'
+    })
+    
+    if (Array.isArray(items)) {
+      cartItems.value = items
+    } else {
+      cartItems.value = []
+    }
   } catch (error) {
-    console.error('Erreur lors du chargement du panier:', error)
+    if (error.status === 401) {
+      localStorage.removeItem('auth_token')
+      await navigateTo('/')
+    } else {
+      console.error('Erreur lors du chargement du panier:', error)
+    }
     cartItems.value = []
   }
 }
@@ -82,14 +99,19 @@ const increaseQuantity = async (itemId) => {
   if (!item) return
 
   try {
-    const userId = localStorage.getItem('userId')
-    if (!userId) return
-
-    await $fetch(`http://127.0.0.1:8000/api/cart/user/${userId}/update-quantity`, {
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+    
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    await $fetch('http://localhost:8000/api/cart/current-user/update-quantity', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      credentials: 'include',
       body: JSON.stringify({
         bookId: itemId,
         quantity: item.quantity + 1
@@ -97,6 +119,9 @@ const increaseQuantity = async (itemId) => {
     })
 
     await loadCart()
+    
+    // Informer les autres composants que le panier a été modifié
+    window.dispatchEvent(new CustomEvent('cart-updated'))
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la quantité:', error)
   }
@@ -107,33 +132,31 @@ const decreaseQuantity = async (itemId) => {
   if (!item) return
 
   try {
-    const userId = localStorage.getItem('userId')
-    if (!userId) return
-
-    if (item.quantity === 1) {
-      await $fetch(`http://127.0.0.1:8000/api/cart/user/${userId}/remove`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookId: itemId
-        })
-      })
-    } else {
-      await $fetch(`http://127.0.0.1:8000/api/cart/user/${userId}/update-quantity`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookId: itemId,
-          quantity: item.quantity - 1
-        })
-      })
+    const newQuantity = item.quantity - 1
+    
+    const headers = {
+      'Content-Type': 'application/json'
     }
+    
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    await $fetch('http://localhost:8000/api/cart/current-user/update-quantity', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({
+        bookId: itemId,
+        quantity: newQuantity
+      })
+    })
 
     await loadCart()
+    
+    // Informer les autres composants que le panier a été modifié
+    window.dispatchEvent(new CustomEvent('cart-updated'))
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la quantité:', error)
   }
@@ -141,20 +164,29 @@ const decreaseQuantity = async (itemId) => {
 
 const removeItem = async (itemId) => {
   try {
-    const userId = localStorage.getItem('userId')
-    if (!userId) return
-
-    await $fetch(`http://127.0.0.1:8000/api/cart/user/${userId}/remove`, {
+    // Préparer les headers avec le token si disponible
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+    
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    await $fetch('http://localhost:8000/api/cart/current-user/remove', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      credentials: 'include',
       body: JSON.stringify({
         bookId: itemId
       })
     })
 
     await loadCart()
+    
+    // Informer les autres composants que le panier a été modifié
+    window.dispatchEvent(new CustomEvent('cart-updated'))
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'article:', error)
   }

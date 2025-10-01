@@ -2,11 +2,12 @@
 
 namespace App\Controller;
 
-use App\Entity\Cart;
 use App\Entity\User;
 use App\Entity\Book;
-use App\Service\CartService;
-use App\Repository\CartRepository;
+use App\Entity\CartItem;
+use App\Repository\UserRepository;
+use App\Repository\BookRepository;
+use App\Repository\CartItemRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,231 +20,254 @@ class CartController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private CartRepository $cartRepository,
-        private CartService $cartService
+        private UserRepository $userRepository,
+        private BookRepository $bookRepository,
+        private CartItemRepository $cartItemRepository
     ) {}
 
-    #[Route('', name: 'cart_index', methods: ['GET'])]
-    public function index(): JsonResponse
+    private function getAuthenticatedUser(Request $request): User|JsonResponse
     {
-        $carts = $this->cartRepository->findAll();
+        $session = $request->getSession();
         
-        return $this->json($carts, Response::HTTP_OK, [], ['groups' => 'cart:read']);
+        if (!$session->isStarted()) {
+            $session->start();
+        }
+        
+        // Vérifier d'abord la session
+        if ($session->get('user_authenticated') && $session->get('user_id')) {
+            $user = $this->userRepository->find($session->get('user_id'));
+            if ($user) {
+                return $user;
+            }
+        }
+        
+        $authHeader = $request->headers->get('Authorization');
+        if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
+            $token = substr($authHeader, 7);
+            try {
+                $tokenData = json_decode(base64_decode($token), true);
+                if ($tokenData && isset($tokenData['user_id']) && isset($tokenData['timestamp'])) {
+                    if (time() - $tokenData['timestamp'] < 3600) {
+                        $user = $this->userRepository->find($tokenData['user_id']);
+                        if ($user) {
+                            return $user;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                error_log("Token decode error: " . $e->getMessage());
+            }
+        }
+        
+        return new JsonResponse(['error' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
     }
 
-    #[Route('/{id}', name: 'cart_show', methods: ['GET'])]
-    public function show(int $id): JsonResponse
+    #[Route('/current-user', name: 'cart_get', methods: ['GET'])]
+    public function getCart(Request $request): JsonResponse
     {
-        $cart = $this->cartRepository->find($id);
+        $userOrResponse = $this->getAuthenticatedUser($request);
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
+        }
+        $user = $userOrResponse;
 
-        if (!$cart) {
-            return $this->json(['message' => 'Cart not found'], Response::HTTP_NOT_FOUND);
+        $userCarts = $user->getCarts();
+        if ($userCarts->isEmpty()) {
+            return new JsonResponse([
+                'success' => true,
+                'items' => [],
+                'count' => 0,
+                'total' => 0
+            ]);
         }
 
-        return $this->json($cart, Response::HTTP_OK, [], ['groups' => 'cart:read']);
+        $activeCart = $userCarts->toArray()[0]; 
+        $cartItems = $this->cartItemRepository->findBy(['cart' => $activeCart]);
+        
+        $items = [];
+        $totalCount = 0;
+        $totalPrice = 0;
+        
+        foreach ($cartItems as $cartItem) {
+            $book = $cartItem->getBook();
+            $authors = [];
+            foreach ($book->getAuthors() as $author) {
+                $authors[] = $author->getFullName();
+            }
+            
+            $unitPrice = (float) $book->getPrix();
+            $quantity = $cartItem->getQuantity();
+            $itemTotal = $unitPrice * $quantity;
+            
+            $items[] = [
+                'id' => $book->getId(),
+                'titre' => $book->getTitre(),
+                'auteur' => implode(', ', $authors),
+                'image' => $book->getImage(),
+                'unitPrice' => $unitPrice,
+                'quantity' => $quantity,
+                'total' => $itemTotal
+            ];
+            
+            $totalCount += $quantity;
+            $totalPrice += $itemTotal;
+        }
+
+        // Mettre à jour le prix total du panier dans la base de données
+        $activeCart->setTotalPrice((string) $totalPrice);
+        $this->entityManager->flush();
+
+        // Retourner les items directement (pas d'objet wrapper)
+        return new JsonResponse($items);
     }
 
-    #[Route('', name: 'cart_create', methods: ['POST'])]
-    public function create(Request $request): JsonResponse
+    #[Route('/current-user/add', name: 'cart_add_item', methods: ['POST'])]
+    public function addItem(Request $request): JsonResponse
     {
+        $userOrResponse = $this->getAuthenticatedUser($request);
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
+        }
+        $user = $userOrResponse;
+
         $data = json_decode($request->getContent(), true);
+        $bookId = $data['bookId'] ?? null;
+        $quantity = $data['quantity'] ?? 1;
 
-        $cart = new Cart();
-        $cart->setTotalPrice($data['totalPrice'] ?? '0.00');
+        if (!$bookId) {
+            return new JsonResponse(['error' => 'Book ID manquant'], Response::HTTP_BAD_REQUEST);
+        }
 
-        $this->entityManager->persist($cart);
+        $book = $this->bookRepository->find($bookId);
+        if (!$book) {
+            return new JsonResponse(['error' => 'Livre non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        $userCarts = $user->getCarts();
+        if ($userCarts->isEmpty()) {
+            return new JsonResponse(['error' => 'Aucun panier trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        $activeCart = $userCarts->toArray()[0];
+        
+        $existingCartItem = $this->cartItemRepository->findByCartAndBook($activeCart, $book);
+        
+        if ($existingCartItem) {
+            $existingCartItem->setQuantity($existingCartItem->getQuantity() + $quantity);
+        } else {
+            $cartItem = new CartItem();
+            $cartItem->setCart($activeCart);
+            $cartItem->setBook($book);
+            $cartItem->setQuantity($quantity);
+            $this->entityManager->persist($cartItem);
+        }
+        
+        $this->updateCartTotal($activeCart);
         $this->entityManager->flush();
 
-        return $this->json($cart, Response::HTTP_CREATED, [], ['groups' => 'cart:read']);
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Article ajouté au panier'
+        ]);
     }
 
-    #[Route('/{id}', name: 'cart_update', methods: ['PUT'])]
-    public function update(int $id, Request $request): JsonResponse
+    #[Route('/current-user/remove', name: 'cart_remove_item', methods: ['POST'])]
+    public function removeItem(Request $request): JsonResponse
     {
-        $cart = $this->cartRepository->find($id);
-
-        if (!$cart) {
-            return $this->json(['message' => 'Cart not found'], Response::HTTP_NOT_FOUND);
+        $userOrResponse = $this->getAuthenticatedUser($request);
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
         }
+        $user = $userOrResponse;
 
         $data = json_decode($request->getContent(), true);
+        $bookId = $data['bookId'] ?? null;
 
-        if (isset($data['totalPrice'])) {
-            $cart->setTotalPrice($data['totalPrice']);
+        if (!$bookId) {
+            return new JsonResponse(['error' => 'Book ID manquant'], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->entityManager->flush();
+        $book = $this->bookRepository->find($bookId);
+        if (!$book) {
+            return new JsonResponse(['error' => 'Livre non trouvé'], Response::HTTP_NOT_FOUND);
+        }
 
-        return $this->json($cart, Response::HTTP_OK, [], ['groups' => 'cart:read']);
+        $userCarts = $user->getCarts();
+        if ($userCarts->isEmpty()) {
+            return new JsonResponse(['error' => 'Aucun panier trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        $activeCart = $userCarts->toArray()[0];
+        $cartItem = $this->cartItemRepository->findByCartAndBook($activeCart, $book);
+        
+        if ($cartItem) {
+            $this->entityManager->remove($cartItem);
+            $this->updateCartTotal($activeCart);
+            $this->entityManager->flush();
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Article retiré du panier'
+        ]);
     }
 
-    #[Route('/{id}', name: 'cart_delete', methods: ['DELETE'])]
-    public function delete(int $id): JsonResponse
+    #[Route('/current-user/update-quantity', name: 'cart_update_quantity', methods: ['POST'])]
+    public function updateQuantity(Request $request): JsonResponse
     {
-        $cart = $this->cartRepository->find($id);
+        $userOrResponse = $this->getAuthenticatedUser($request);
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
+        }
+        $user = $userOrResponse;
 
-        if (!$cart) {
-            return $this->json(['message' => 'Cart not found'], Response::HTTP_NOT_FOUND);
+        $data = json_decode($request->getContent(), true);
+        $bookId = $data['bookId'] ?? null;
+        $quantity = $data['quantity'] ?? 1;
+
+        if (!$bookId) {
+            return new JsonResponse(['error' => 'Book ID manquant'], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->entityManager->remove($cart);
-        $this->entityManager->flush();
+        $book = $this->bookRepository->find($bookId);
+        if (!$book) {
+            return new JsonResponse(['error' => 'Livre non trouvé'], Response::HTTP_NOT_FOUND);
+        }
 
-        return $this->json(['message' => 'Cart deleted'], Response::HTTP_OK);
+        $userCarts = $user->getCarts();
+        if ($userCarts->isEmpty()) {
+            return new JsonResponse(['error' => 'Aucun panier trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        $activeCart = $userCarts->toArray()[0];
+        $cartItem = $this->cartItemRepository->findByCartAndBook($activeCart, $book);
+        
+        if ($cartItem) {
+            if ($quantity <= 0) {
+                $this->entityManager->remove($cartItem);
+            } else {
+                $cartItem->setQuantity($quantity);
+            }
+            
+            $this->updateCartTotal($activeCart);
+            $this->entityManager->flush();
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Quantité mise à jour'
+        ]);
     }
 
-    #[Route('/user/{userId}', name: 'cart_user_get', methods: ['GET'])]
-    public function getUserCart(int $userId): JsonResponse
+    private function updateCartTotal($cart): void
     {
-        try {
-            $userRepository = $this->entityManager->getRepository(User::class);
-            $user = $userRepository->find($userId);
-
-            if (!$user) {
-                return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            $items = $this->cartService->getCartItems($user);
-
-            return $this->json($items, Response::HTTP_OK);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        $cartItems = $this->cartItemRepository->findBy(['cart' => $cart]);
+        $total = 0;
+        
+        foreach ($cartItems as $item) {
+            $total += (float) $item->getBook()->getPrix() * $item->getQuantity();
         }
-    }
-
-    #[Route('/user/{userId}/test', name: 'cart_user_test', methods: ['GET'])]
-    public function testUser(int $userId): JsonResponse
-    {
-        try {
-            $userRepository = $this->entityManager->getRepository(User::class);
-            $user = $userRepository->find($userId);
-
-            if (!$user) {
-                return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            return $this->json([
-                'user_id' => $user->getId(),
-                'nom' => $user->getNom(),
-                'prenom' => $user->getPrenom(),
-                'carts_count' => $user->getCarts()->count()
-            ], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/user/{userId}/add', name: 'cart_user_add_item', methods: ['POST'])]
-    public function addItemToUserCart(int $userId, Request $request): JsonResponse
-    {
-        try {
-            $userRepository = $this->entityManager->getRepository(User::class);
-            $user = $userRepository->find($userId);
-
-            if (!$user) {
-                return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            $data = json_decode($request->getContent(), true);
-            $bookId = $data['bookId'] ?? null;
-            $quantity = $data['quantity'] ?? 1;
-
-            if (!$bookId) {
-                return $this->json(['message' => 'Book ID is required'], Response::HTTP_BAD_REQUEST);
-            }
-
-            $bookRepository = $this->entityManager->getRepository(Book::class);
-            $book = $bookRepository->find($bookId);
-
-            if (!$book) {
-                return $this->json(['message' => 'Book not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            $result = $this->cartService->addItemToCart($user, $book, $quantity);
-
-            return $this->json([
-                'message' => 'Item added to cart',
-                'cart_id' => $result['cart_id'],
-                'total' => $result['total']
-            ], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            return $this->json([
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/user/{userId}/remove', name: 'cart_user_remove_item', methods: ['POST'])]
-    public function removeItemFromUserCart(int $userId, Request $request): JsonResponse
-    {
-        try {
-            $userRepository = $this->entityManager->getRepository(User::class);
-            $user = $userRepository->find($userId);
-
-            if (!$user) {
-                return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            $data = json_decode($request->getContent(), true);
-            $bookId = $data['bookId'] ?? null;
-
-            if (!$bookId) {
-                return $this->json(['message' => 'Book ID is required'], Response::HTTP_BAD_REQUEST);
-            }
-
-            $bookRepository = $this->entityManager->getRepository(Book::class);
-            $book = $bookRepository->find($bookId);
-
-            if (!$book) {
-                return $this->json(['message' => 'Book not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            $result = $this->cartService->removeItemFromCart($user, $book);
-
-            return $this->json([
-                'message' => 'Item removed from cart',
-                'total' => $result['total']
-            ], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/user/{userId}/update-quantity', name: 'cart_user_update_quantity', methods: ['POST'])]
-    public function updateItemQuantity(int $userId, Request $request): JsonResponse
-    {
-        try {
-            $userRepository = $this->entityManager->getRepository(User::class);
-            $user = $userRepository->find($userId);
-
-            if (!$user) {
-                return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            $data = json_decode($request->getContent(), true);
-            $bookId = $data['bookId'] ?? null;
-            $quantity = $data['quantity'] ?? 1;
-
-            if (!$bookId || $quantity < 1) {
-                return $this->json(['message' => 'Book ID and valid quantity are required'], Response::HTTP_BAD_REQUEST);
-            }
-
-            $bookRepository = $this->entityManager->getRepository(Book::class);
-            $book = $bookRepository->find($bookId);
-
-            if (!$book) {
-                return $this->json(['message' => 'Book not found'], Response::HTTP_NOT_FOUND);
-            }
-
-            $result = $this->cartService->updateItemQuantity($user, $book, $quantity);
-
-            return $this->json([
-                'message' => 'Quantity updated',
-                'total' => $result['total']
-            ], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        
+        $cart->setTotalPrice((string) $total);
     }
 }

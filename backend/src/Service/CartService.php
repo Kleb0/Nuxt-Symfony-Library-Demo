@@ -20,17 +20,29 @@ class CartService
 
     public function getOrCreateActiveCartForUser(User $user): Cart
     {
-        $activeCart = $user->getActiveCart();
-        
-        if (!$activeCart) {
-            $activeCart = new Cart();
-            $activeCart->setTotalPrice('0.00');
-            $this->entityManager->persist($activeCart);
-            $user->addCart($activeCart);
-            $this->entityManager->flush();
+        try {
+            $userCarts = $user->getCarts();
+            error_log("User ID: " . $user->getId() . " - Number of carts: " . $userCarts->count());
+            
+            if ($userCarts->isEmpty()) {
+                $activeCart = new Cart();
+                $activeCart->setTotalPrice('0.00');
+                $this->entityManager->persist($activeCart);
+                $user->addCart($activeCart);
+                $this->entityManager->flush();
+                error_log("Created new cart for user " . $user->getId());
+                return $activeCart;
+            }
+            
+            // Récupérer le dernier panier de façon plus sûre
+            $cartsArray = $userCarts->toArray();
+            $lastCart = end($cartsArray);
+            error_log("Using existing cart ID: " . $lastCart->getCartId());
+            return $lastCart;
+        } catch (\Exception $e) {
+            error_log("Error in getOrCreateActiveCartForUser: " . $e->getMessage());
+            throw $e;
         }
-        
-        return $activeCart;
     }
 
     public function addItemToCart(User $user, Book $book, int $quantity = 1): array
@@ -61,12 +73,14 @@ class CartService
 
     public function removeItemFromCart(User $user, Book $book): array
     {
-        $activeCart = $user->getActiveCart();
+        $userCarts = $user->getCarts();
         
-        if (!$activeCart) {
+        if ($userCarts->isEmpty()) {
             return ['success' => false, 'message' => 'No active cart found'];
         }
         
+        $cartsArray = $userCarts->toArray();
+        $activeCart = end($cartsArray);
         $cartItem = $this->cartItemRepository->findByCartAndBook($activeCart, $book);
         
         if ($cartItem) {
@@ -83,12 +97,14 @@ class CartService
 
     public function updateItemQuantity(User $user, Book $book, int $quantity): array
     {
-        $activeCart = $user->getActiveCart();
+        $userCarts = $user->getCarts();
         
-        if (!$activeCart) {
+        if ($userCarts->isEmpty()) {
             return ['success' => false, 'message' => 'No active cart found'];
         }
         
+        $cartsArray = $userCarts->toArray();
+        $activeCart = end($cartsArray);
         $cartItem = $this->cartItemRepository->findByCartAndBook($activeCart, $book);
         
         if ($cartItem) {
@@ -110,12 +126,14 @@ class CartService
 
     public function getCartItems(User $user): array
     {
-        $activeCart = $user->getActiveCart();
+        $userCarts = $user->getCarts();
         
-        if (!$activeCart) {
+        if ($userCarts->isEmpty()) {
             return [];
         }
         
+        $cartsArray = $userCarts->toArray();
+        $activeCart = end($cartsArray);
         $cartItems = $this->cartItemRepository->findBy(['cart' => $activeCart]);
         $items = [];
         

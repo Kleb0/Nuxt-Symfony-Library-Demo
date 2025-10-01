@@ -4,9 +4,10 @@ namespace App\DataFixtures;
 
 use App\Entity\Status;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class StatusFixtures extends Fixture
+class StatusFixtures extends Fixture implements FixtureGroupInterface
 {
     public function load(ObjectManager $manager): void
     {
@@ -35,5 +36,10 @@ class StatusFixtures extends Fixture
         }
         
         $manager->flush();
+    }
+
+    public static function getGroups(): array
+    {
+        return ['User'];
     }
 }

@@ -1,5 +1,5 @@
 <template>
-  <NuxtLink to="/votre-panier" class="panier-btn" v-if="isLoggedIn">
+  <button @click="goToCart" class="panier-btn" v-if="isLoggedIn">
     <div class="cart-icon-container">
       <ShoppingCartIcon class="icon" />
       <div v-if="totalItems > 0" class="cart-badge">
@@ -7,81 +7,76 @@
       </div>
     </div>
     Votre panier
-  </NuxtLink>
+  </button>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, inject, onMounted, onUnmounted } from 'vue'
 import { ShoppingCartIcon } from '@heroicons/vue/24/outline'
 
 const isLoggedIn = ref(false)
 const totalItems = ref(0)
+const currentUser = inject('currentUser', ref(null))
 
 const loadCartCount = async () => {
-  try {
-    const userId = localStorage.getItem('userId')
-    if (!userId) {
-      totalItems.value = 0
-      return
-    }
-    
-    const response = await $fetch(`http://127.0.0.1:8000/api/cart/user/${userId}`)
-    const cartItems = response || []
-    
-    totalItems.value = cartItems.reduce((total, item) => total + item.quantity, 0)
-  } catch (error) {
-    console.error('Erreur lors du chargement du compteur panier:', error)
+  if (!currentUser.value?.id) {
     totalItems.value = 0
+    return
+  }
+  
+  try {
+    const headers = { 'Content-Type': 'application/json' }
+    const token = localStorage.getItem('auth_token')
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    
+    const cartItems = await $fetch('http://localhost:8000/api/cart/current-user', {
+      method: 'GET',
+      headers,
+      credentials: 'include'
+    })
+    
+    totalItems.value = Array.isArray(cartItems) 
+      ? cartItems.reduce((total, item) => total + item.quantity, 0) 
+      : 0
+  } catch (error) {
+    totalItems.value = 0
+    if (error.status === 401) {
+      localStorage.removeItem('auth_token')
+      isLoggedIn.value = false
+    }
   }
 }
 
-const checkLoginState = async () => {
-  const savedLoginState = localStorage.getItem('isLoggedIn')
-  const savedUserId = localStorage.getItem('userId')
-  const wasLoggedIn = isLoggedIn.value
-  
-  isLoggedIn.value = savedLoginState === 'true' && !!savedUserId
-  
+const updateUserStatus = () => {
+  isLoggedIn.value = !!(currentUser.value?.id)
   if (isLoggedIn.value) {
-    await loadCartCount()
+    loadCartCount()
   } else {
     totalItems.value = 0
   }
-  
-  if (wasLoggedIn !== isLoggedIn.value) {
-    if (isLoggedIn.value) {
-      await loadCartCount()
-    } else {
-      totalItems.value = 0
-    }
-  }
 }
 
-onMounted(async () => {
-  await checkLoginState()
-  
-  window.addEventListener('storage', checkLoginState)
-  
-  const interval = setInterval(async () => {
-    await checkLoginState()
-    if (isLoggedIn.value) {
-      await loadCartCount()
-    }
-  }, 2000)
-  
-  onUnmounted(() => {
-    window.removeEventListener('storage', checkLoginState)
-    clearInterval(interval)
-  })
+const goToCart = () => {
+  window.location.href = '/votre-panier'
+}
+
+onMounted(() => {
+  updateUserStatus()
+  window.addEventListener('cart-updated', loadCartCount)
+  window.addEventListener('user-status-changed', updateUserStatus)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('cart-updated', loadCartCount)
+  window.removeEventListener('user-status-changed', updateUserStatus)
 })
 </script>
 
 <style scoped>
 .panier-btn {
-  color: #3b3434;
-  font-size: 24px;
+  color: #ede9d0;
+  font-size: 28px;
   font-family: 'Roboto', sans-serif;
-  font-weight: 500;
   text-decoration: none;
   padding: 12px 24px;
   border-radius: 12px;
@@ -89,6 +84,9 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .panier-btn:hover {

@@ -11,14 +11,12 @@
 <style scoped>
 .hero-page {
   width: 100%;
-  padding: 48px 0;
+  padding: 10px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
-  border-radius: 24px;
-  margin-bottom: 80px;
+  background: #ede9d0;
 }
 .hero-title {
   font-size: 2.5rem;

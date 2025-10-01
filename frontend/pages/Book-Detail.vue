@@ -1,33 +1,41 @@
 <template>
-  <div class="Page">
-    <div class="Book-card">
-      <div class="Image">
-        <img v-if="book.image" :src="book.image" :alt="book.titre" />
-        <div v-else class="Image-placeholder">Aucune image</div>
+  <div class="w-full max-w-[1000px] h-[1000px] flex flex-col my-5 mx-auto items-center px-4 py-10 gap-4">
+   
+    <!-- Carte principale du livre -->
+    <div class="w-full max-w-[850px] h-[800px] bg-[#e7e1d5] rounded-3xl border-2 border-white/20 p-5 flex flex-col items-center lg:h-auto lg:pb-6 book-card">
+     
+      <!-- Container de l'image -->
+      <div class="h-[400px] rounded-[20px] w-[480px] flex justify-center lg:w-[450px] lg:h-[350px] image-container">
+        <img v-if="book.image" :src="book.image" :alt="book.titre" class="w-full h-full object-contain rounded-[inherit] book-image" />
+        <div v-else class="text-white font-semibold flex items-center justify-center image-placeholder">Aucune image</div>
       </div>
-      <div class="Details">
-        <div class="Details-content">
-          <p class="meta"><strong>Auteur:</strong> {{ book.auteur || '—' }}</p>
-          <p class="meta"><strong>Catégorie:</strong> {{ book.categorie || '—' }}</p>
-          <h2 class="title">Résumé</h2>
-          <p class="resume">{{ book.resume || '—' }}</p>
-          <div class="price"><strong>Prix:</strong> <span>{{ book.unitPrice ? book.unitPrice + '€' : '—' }}</span></div>
+      
+      <!-- Container des détails -->
+      <div class="h-[300px] w-[80%] flex justify-center p-2.5 mt-20 rounded-[20px] lg:w-[95%] lg:h-auto lg:mt-20">
+        <div class="w-[80%] h-[80%] text-[#063c2b] bg-white/90 rounded-[20px] px-4 py-3 box-border break-words lg:w-full details-content">
+          <p class="mb-2 book-meta"><strong>Auteur:</strong> {{ book.auteur || '—' }}</p>
+          <p class="mb-2 book-meta"><strong>Catégorie:</strong> {{ book.categorie || '—' }}</p>
+          <h2 class="text-xl font-bold my-2 mb-1.5 book-title">Résumé</h2>
+          <p class="leading-relaxed book-resume">{{ book.resume || '—' }}</p>
+          <div class="mt-3 text-lg book-price"><strong>Prix:</strong> <span>{{ book.unitPrice ? book.unitPrice + '€' : '—' }}</span></div>
           <button 
             v-if="isLoggedIn" 
             @click="addToCart" 
-            class="add-to-cart-btn"
+            class="border-none px-6 py-3 rounded-[20px] font-semibold text-base cursor-pointer mt-6 w-full transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed add-to-cart-btn"
             :disabled="isAdding"
           >
             {{ isAdding ? 'Ajout...' : 'Ajouter au panier' }}
           </button>
-          <div v-if="!isLoggedIn" class="login-required">
+          <div v-if="!isLoggedIn" class="mt-6 p-3 bg-gray-100 rounded-lg text-red-500 text-center italic login-required">
             Connectez-vous pour ajouter au panier
           </div>
         </div>
       </div>
     </div>
-    <div class="BackWrapper">
-      <NuxtLink to="/" class="button-accueil">← Retour à l'accueil</NuxtLink>
+    
+    <!-- Bouton de retour -->
+    <div class="w-full flex items-center justify-center my-6 mb-10">
+      <NuxtLink to="/" class="bg-blue-700 text-white px-5 py-2.5 rounded-[10px] no-underline transition-all duration-200 back-button">← Retour à l'accueil</NuxtLink>
     </div>
   </div>
   
@@ -35,7 +43,7 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, inject, watch } from 'vue'
 
 const route = useRoute()
 const q = route.query || {}
@@ -51,229 +59,184 @@ const book = {
 
 const isLoggedIn = ref(false)
 const isAdding = ref(false)
+const currentUser = inject('currentUser', ref(null))
 
-const checkLoginStatus = () => {
-  const savedLoginState = localStorage.getItem('isLoggedIn')
-  const savedUserId = localStorage.getItem('userId')
-  isLoggedIn.value = savedLoginState === 'true' && !!savedUserId
-}
+watch(() => currentUser.value, (newUser) => {
+  isLoggedIn.value = !!newUser
+}, { immediate: true })
 
 const addToCart = async () => {
-  if (!isLoggedIn.value || isAdding.value) return
+  if (!isLoggedIn.value || isAdding.value || !currentUser.value) return
   
   isAdding.value = true
   
   try {
-    const userId = localStorage.getItem('userId')
-    if (!userId) {
-      isAdding.value = false
-      return
+    // Préparer les headers avec le token si disponible
+    const headers = {
+      'Content-Type': 'application/json'
     }
-
-    const response = await $fetch(`http://127.0.0.1:8000/api/cart/user/${userId}/add`, {
+    
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    await $fetch('http://localhost:8000/api/cart/current-user/add', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      credentials: 'include',
       body: JSON.stringify({
         bookId: parseInt(book.id),
         quantity: 1
       })
     })
 
-
     setTimeout(() => {
       isAdding.value = false
     }, 500)
     
+    // Informer les autres composants que le panier a été modifié
+    window.dispatchEvent(new CustomEvent('cart-updated'))
+    
   } catch (error) {
+    console.error('Erreur lors de l\'ajout au panier:', error)
+    // Supprimer le token invalide si erreur 401
+    if (error.status === 401) {
+      localStorage.removeItem('auth_token')
+    }
     isAdding.value = false
   }
 }
-
-onMounted(() => {
-  checkLoginStatus()
-  
-  const interval = setInterval(checkLoginStatus, 1000)
-  
-  onUnmounted(() => {
-    clearInterval(interval)
-  })
-})
 </script>
 
 <style scoped>
-.Page {
-  min-height: 70vh;
-  display: flex;
-  flex-direction: column; 
-  margin: 40px auto;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 16px;
-  gap: 16px;
+/* 🎨 Approche sobre et professionnelle */
+
+/* Carte principale - animation d'entrée douce */
+.book-card {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  animation: slideInUp 0.6s ease-out;
 }
 
-.Book-card 
-{
-  width: min(90vw, 850px);
-  height: 1100px;
-  background: #f0ece4;
-  border-radius: 24px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
+.book-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
-.Image {
-  height: 700px;
-  border-radius: 20px;
-  width: 1000px;
-  display: flex;
-  position: absolute;
-  justify-content: center;
+/* Container image - effet subtil */
+.image-container {
+  transition: transform 0.3s ease;
+  overflow: hidden;
 }
 
-.Image img {
-  width: 45%;
-  height: 100%;
-  object-fit: cover; 
-  border-radius: inherit;
+.book-image {
+  transition: transform 0.3s ease;
 }
 
-.Image-placeholder {
-  color: white;
-  font-weight: 600;
+.image-container:hover .book-image {
+  transform: scale(1.05);
 }
 
-.Details {
-  height: 300px;
-  width: 40%;
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  padding: 10;
-  margin-top: 750px; 
-  border-radius: 20px;
+
+.image-placeholder {
+  background: linear-gradient(135deg, #6b7280, #9ca3af);
 }
 
-.Details-content {
-  width: 60%;
-  height: 80%;
-  max-width: none; 
-  color: #063c2b;
-  background: rgba(255,255,255,0.9);
-  border-radius: 20px;
-  padding: 12px 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  box-sizing: border-box;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  hyphens: auto;
+.details-content {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  animation: slideInUp 0.8s ease-out 0.2s both;
 }
 
-.Details-content .title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 8px 0 6px;
+.book-meta {
+  transition: color 0.2s ease;
 }
 
-.Details-content .resume {
-  line-height: 1.6;
+.book-meta:hover {
+  color: #3b82f6;
 }
 
-.Details-content .price {
-  margin-top: 12px;
-  font-size: 1.1rem;
+
+.book-title {
+  background: linear-gradient(135deg, #063c2b 0%, #3b82f6 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
+
+
+.book-resume {
+  text-align: justify;
+  line-height: 1.7;
+  animation: fadeIn 1s ease-out 0.4s both;
+}
+
 
 .add-to-cart-btn {
-  background: #DEA54A;
-  color: #3b3434;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-weight: 600;
+  background:  #f59e0b;
+  color: #1f2937;
   font-family: 'Roboto', sans-serif;
-  font-size: 1.0rem;
-  cursor: pointer;
-  margin-top: 250px;
-  width: 100%;
-  transition: background 0.2s, transform 0.1s;
+  font-weight: 600;
+
 }
 
 .add-to-cart-btn:hover:not(:disabled) {
-  background: #2a1f1f;
-  color: #fff;
+  background: #3b3434;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(31, 41, 55, 0.4);
 }
 
-.add-to-cart-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+.add-to-cart-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-.login-required {
-  margin-top: 250px;
-  padding: 12px;
-  background: #f3f4f6;
-  border-radius: 8px;
-  color: #ff0000;
-  text-align: center;
-  font-style: italic;
+.login-required 
+{
+  background: #dbcccc;
+  border-radius: 20px;
 }
 
-.BackWrapper {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 24px 0 40px;
-}
-
-.button-accueil {
-  background: #1d4ed8; 
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
-  text-decoration: none;
+.back-button {
   font-family: 'Roboto', sans-serif;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  transition: background 0.2s, color 0.2s;
+  font-weight: 500;
+  background: #3b82f6;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+
 }
 
-.button-accueil:hover {
+.back-button:hover {
   background: #3b3434;
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 52, 52, 0.4);
 }
 
-@media (max-width: 1200px) {
-  .Book-card {
-    height: auto;
-    padding-bottom: 24px;
-  }
-  .Image {
-    position: static;
-    width: 90%;
-    height: 420px;
-  }
-  .Image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .Details {
-    position: static;
-    width: 95%;
-    height: auto;
-    margin-top: 16px;
-  }
-  .Details-content {
-    width: 100%;
 
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+
+
 </style>
+
+

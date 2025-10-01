@@ -1,0 +1,5 @@
+framework:
+    session:
+        cookie_domain: '127.0.0.1'
+        cookie_path: '/'
+        name: 'NUXT_SYMFONY_SESS'

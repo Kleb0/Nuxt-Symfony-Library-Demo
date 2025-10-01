@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, inject, watch } from 'vue'
 import { UserIcon, ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 
 const isLoggedIn = ref(false)
@@ -64,15 +64,18 @@ const passwordInput = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
 
-async function fetchUserData(userId) {
-  try {
-    const response = await $fetch(`http://localhost:8000/api/users/${userId}`)
-    return response
-  } catch (error) {
-    console.error('Erreur lors de la récupération des données utilisateur:', error)
-    return null
+const updateCurrentUser = inject('updateCurrentUser', () => {})
+const injectedCurrentUser = inject('currentUser', ref(null))
+
+watch(injectedCurrentUser, (newUser) => {
+  if (newUser) {
+    currentUser.value = newUser
+    isLoggedIn.value = true
+  } else {
+    currentUser.value = null
+    isLoggedIn.value = false
   }
-}
+}, { immediate: true })
 
 async function login() {
   if (!loginInput.value || !passwordInput.value) {
@@ -89,6 +92,7 @@ async function login() {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({
         email: loginInput.value,
         password: passwordInput.value
@@ -96,21 +100,14 @@ async function login() {
     })
 
     if (response.success && response.user) {
-      const userData = await fetchUserData(response.user.id)
-      
-      if (userData) {
-        currentUser.value = userData
-        isLoggedIn.value = true
-        
-        localStorage.setItem('isLoggedIn', 'true')
-        localStorage.setItem('userId', response.user.id.toString())
-        localStorage.setItem('userToken', response.token || '')
-        
-        loginInput.value = ''
-        passwordInput.value = ''
+      if (response.token) {
+        localStorage.setItem('auth_token', response.token)
       }
+      updateCurrentUser(response.user)
+      loginInput.value = ''
+      passwordInput.value = ''
     } else {
-      errorMessage.value = 'Identifiants incorrects'
+      errorMessage.value = response.message || 'Identifiants incorrects'
     }
   } catch (error) {
     console.error('Erreur de connexion:', error)
@@ -120,18 +117,25 @@ async function login() {
   }
 }
 
-function logout() {
-  isLoggedIn.value = false
-  currentUser.value = null
+async function logout() {
+  try {
+    await $fetch('http://localhost:8000/api/logout', {
+      method: 'POST',
+      credentials: 'include' 
+    })
+  } catch (error) {
+    console.error('Erreur lors de la déconnexion:', error)
+  }
+
+
+  localStorage.removeItem('auth_token')
+
+  
+  updateCurrentUser(null)
   loginInput.value = ''
   passwordInput.value = ''
-  errorMessage.value = ''  
-  
-  localStorage.removeItem('isLoggedIn')
-  localStorage.removeItem('userId')
-  localStorage.removeItem('userToken')
+  errorMessage.value = ''
 }
-
 
 function goToAccount() {
   const router = useRouter()
@@ -142,21 +146,6 @@ function goToInscription() {
   const router = useRouter()
   router.push('/inscription')
 }
-
-onMounted(async () => {
-  const savedLoginState = localStorage.getItem('isLoggedIn')
-  const savedUserId = localStorage.getItem('userId')
-  
-  if (savedLoginState === 'true' && savedUserId) {
-    const userData = await fetchUserData(parseInt(savedUserId))
-    if (userData) {
-      currentUser.value = userData
-      isLoggedIn.value = true
-    } else {
-      logout()
-    }
-  }
-})
 </script>
 
 <style scoped>
@@ -218,7 +207,7 @@ onMounted(async () => {
   gap: 15px;
   border-radius: 12px;
   padding: 18px;
-  background-color: #fafafa;
+  background-color: #ede9d0;
 }
 
 .login-input {

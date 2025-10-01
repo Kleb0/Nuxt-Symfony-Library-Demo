@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-    <div class="card-content" :style="{ backgroundImage: `url(${book?.image})` }">
+    <div class="card-content" :style="{ backgroundImage: `url(${getImageUrl(book?.image)})` }">
     </div>
     <div class="card-title">
       <h3>{{ book?.titre }}</h3>
@@ -12,7 +12,6 @@
 </template>
 
 <script setup>
-// Définition des props
 import { useRouter } from 'vue-router'
 
 const props = defineProps({
@@ -24,10 +23,14 @@ const props = defineProps({
 
 const router = useRouter()
 
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return ''
+  return `http://localhost:8000/${imagePath}`
+}
+
 const goToDetail = () => {
   const b = props.book || {}
   
-  // Mapping des données API vers les champs attendus
   const authorNames = b.authors ? b.authors.map(author => 
     author.fullName || `${author.firstName || ''} ${author.lastName || ''}`.trim()
   ).join(', ') : ''
@@ -40,7 +43,7 @@ const goToDetail = () => {
       titre: b.titre || '',
       auteur: authorNames,
       categorie: categoryNames,
-      image: b.image || '',
+      image: getImageUrl(b.image) || '',
       resume: b.description || '',
       unitPrice: b.prix ? String(b.prix) : ''
     }

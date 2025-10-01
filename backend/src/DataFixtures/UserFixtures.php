@@ -4,11 +4,13 @@ namespace App\DataFixtures;
 
 use App\Entity\User;
 use App\Entity\Status;
+use App\Entity\Cart;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 
-class UserFixtures extends Fixture implements DependentFixtureInterface
+class UserFixtures extends Fixture implements DependentFixtureInterface, FixtureGroupInterface
 {
     public function load(ObjectManager $manager): void
     {
@@ -25,6 +27,9 @@ class UserFixtures extends Fixture implements DependentFixtureInterface
         $statusAdmin = $this->getReference('status-2', Status::class);
         $admin->addStatus($statusAdmin);
         
+        $cartAdmin = $this->getReference('cart-admin', Cart::class);
+        $admin->addCart($cartAdmin);
+        
         $manager->persist($admin);
         $this->addReference('user-admin', $admin);
         
@@ -35,6 +40,12 @@ class UserFixtures extends Fixture implements DependentFixtureInterface
     {
         return [
             StatusFixtures::class,
+            CartFixtures::class,
         ];
+    }
+
+    public static function getGroups(): array
+    {
+        return ['User'];
     }
 }

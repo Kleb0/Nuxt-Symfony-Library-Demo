@@ -140,11 +140,11 @@ async function submitForm() {
       imageBase64 = await convertImageToJpeg(imageFile.value)
     }
 
-    const response = await $fetch('http://localhost:8000/api/users', {
+    const response = await $fetch('http://localhost:8000/api/register', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
         nom: nom.value,
@@ -154,12 +154,13 @@ async function submitForm() {
         telephone: telephone.value,
         adresse: adresse.value,
         motDePasse: motDePasse.value,
-        imageProfil: imageBase64,
-        statusId: 2 
+        imageProfil: imageBase64
       })
     })
-    if (response.id) {
-      successMessage.value = 'Inscription réussie ! Vous pouvez maintenant vous connecter.'
+    
+    if (response.success) {
+      successMessage.value = response.message
+      // Réinitialiser le formulaire
       nom.value = ''
       prenom.value = ''
       pseudo.value = ''
@@ -172,7 +173,7 @@ async function submitForm() {
       imagePreview.value = ''
       document.getElementById('imageUpload').value = ''
     } else {
-      errorMessage.value = "Erreur lors de l'inscription."
+      errorMessage.value = response.message || 'Erreur lors de l\'inscription'
     }
   } catch (error) {
     console.error('Erreur détaillée:', error)
