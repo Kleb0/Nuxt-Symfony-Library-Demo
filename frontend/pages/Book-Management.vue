@@ -4,7 +4,15 @@
         
         <!-- Section Livres -->
         <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">📚 Livres</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700">📚 Livres</h2>
+                <button
+                    @click="openCreateBookModal"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                >
+                    + Créer un livre
+                </button>
+            </div>
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div v-if="booksLoading" class="p-4 text-center">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
@@ -111,7 +119,15 @@
 
         <!-- Section Auteurs -->
         <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">✍️ Auteurs</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700">✍️ Auteurs</h2>
+                <button
+                    @click="openCreateAuthorModal"
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                >
+                    + Créer un auteur
+                </button>
+            </div>
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div v-if="authorsLoading" class="p-4 text-center">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
@@ -163,7 +179,15 @@
 
         <!-- Section Catégories -->
         <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">🏷️ Catégories</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700">🏷️ Catégories</h2>
+                <button
+                    @click="openCreateCategoryModal"
+                    class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                >
+                    + Créer une catégorie
+                </button>
+            </div>
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div v-if="categoriesLoading" class="p-4 text-center">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
@@ -476,6 +500,285 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de création de livre -->
+    <div v-if="showCreateBookModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Créer un nouveau livre</h3>
+                <button
+                    @click="closeCreateBookModal"
+                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form @submit.prevent="createBook" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Titre *</label>
+                        <input
+                            v-model="createBookForm.titre"
+                            type="text"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Prix *</label>
+                        <input
+                            v-model="createBookForm.prix"
+                            type="number"
+                            step="0.01"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stock *</label>
+                        <input
+                            v-model="createBookForm.stock"
+                            type="number"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
+                        <input
+                            v-model="createBookForm.isbn"
+                            type="text"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date de publication</label>
+                        <input
+                            v-model="createBookForm.datePublication"
+                            type="date"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de pages</label>
+                        <input
+                            v-model="createBookForm.nombrePages"
+                            type="number"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea
+                        v-model="createBookForm.description"
+                        rows="4"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    ></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Image du livre</label>
+                    <div class="space-y-2">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            @change="handleCreateImageSelect"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        />
+                        <p class="text-xs text-gray-500">Formats acceptés : JPG, PNG, GIF. Taille max : 5MB</p>
+                        <div v-if="createBookImageFile" class="text-sm text-green-600">
+                            ✓ Image sélectionnée : {{ createBookImageFile.name }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Auteurs</label>
+                        <select
+                            v-model="createBookForm.authors"
+                            multiple
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
+                        >
+                            <option v-for="author in authors" :key="author.id" :value="author.id">
+                                {{ author.fullName }}
+                            </option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Maintenez Ctrl/Cmd pour sélectionner plusieurs auteurs</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catégories</label>
+                        <select
+                            v-model="createBookForm.categories"
+                            multiple
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
+                        >
+                            <option v-for="category in categories" :key="category.id" :value="category.id">
+                                {{ category.name }}
+                            </option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Maintenez Ctrl/Cmd pour sélectionner plusieurs catégories</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        @click="closeCreateBookModal"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                        Créer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de création d'auteur -->
+    <div v-if="showCreateAuthorModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Créer un nouvel auteur</h3>
+                <button
+                    @click="closeCreateAuthorModal"
+                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form @submit.prevent="createAuthor" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
+                        <input
+                            v-model="createAuthorForm.firstName"
+                            type="text"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                        <input
+                            v-model="createAuthorForm.lastName"
+                            type="text"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nationalité</label>
+                        <input
+                            v-model="createAuthorForm.nationality"
+                            type="text"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
+                        <input
+                            v-model="createAuthorForm.birthDate"
+                            type="date"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        @click="closeCreateAuthorModal"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                        Créer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de création de catégorie -->
+    <div v-if="showCreateCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Créer une nouvelle catégorie</h3>
+                <button
+                    @click="closeCreateCategoryModal"
+                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form @submit.prevent="createCategory" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                    <input
+                        v-model="createCategoryForm.name"
+                        type="text"
+                        required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea
+                        v-model="createCategoryForm.description"
+                        rows="4"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    ></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        @click="closeCreateCategoryModal"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                    >
+                        Créer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -503,7 +806,7 @@ const categoriesError = ref<string | null>(null)
 // État pour gérer les uploads d'images
 const uploadingImages = ref(new Set<number>())
 
-// État pour gérer le modal de modification
+// États pour gérer les modals de modification
 const showEditModal = ref(false)
 const editingBook = ref<Book | null>(null)
 const editForm = ref({
@@ -516,6 +819,37 @@ const editForm = ref({
   nombrePages: 0,
   authors: [] as number[],
   categories: [] as number[]
+})
+
+// États pour gérer les modals de création
+const showCreateBookModal = ref(false)
+const showCreateAuthorModal = ref(false)
+const showCreateCategoryModal = ref(false)
+
+const createBookForm = ref({
+  titre: '',
+  description: '',
+  prix: '',
+  stock: 0,
+  isbn: '',
+  datePublication: '' as string | undefined,
+  nombrePages: 0,
+  authors: [] as number[],
+  categories: [] as number[]
+})
+
+const createBookImageFile = ref<File | null>(null)
+
+const createAuthorForm = ref({
+  firstName: '',
+  lastName: '',
+  nationality: '',
+  birthDate: '' as string | undefined
+})
+
+const createCategoryForm = ref({
+  name: '',
+  description: ''
 })
 
 // États pour les modals d'auteurs
@@ -579,6 +913,82 @@ const closeEditModal = () => {
   editingBook.value = null
 }
 
+// Fonctions pour les modals de création
+const openCreateBookModal = () => {
+  createBookForm.value = {
+    titre: '',
+    description: '',
+    prix: '',
+    stock: 0,
+    isbn: '',
+    datePublication: '',
+    nombrePages: 0,
+    authors: [],
+    categories: []
+  }
+  createBookImageFile.value = null
+  showCreateBookModal.value = true
+}
+
+const closeCreateBookModal = () => {
+  showCreateBookModal.value = false
+}
+
+const openCreateAuthorModal = () => {
+  createAuthorForm.value = {
+    firstName: '',
+    lastName: '',
+    nationality: '',
+    birthDate: ''
+  }
+  showCreateAuthorModal.value = true
+}
+
+const closeCreateAuthorModal = () => {
+  showCreateAuthorModal.value = false
+}
+
+const openCreateCategoryModal = () => {
+  createCategoryForm.value = {
+    name: '',
+    description: ''
+  }
+  showCreateCategoryModal.value = true
+}
+
+const closeCreateCategoryModal = () => {
+  showCreateCategoryModal.value = false
+}
+
+// Fonction pour gérer la sélection d'image lors de la création
+const handleCreateImageSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file) {
+    createBookImageFile.value = null
+    return
+  }
+  
+  // Vérifier le type de fichier
+  if (!file.type.startsWith('image/')) {
+    alert('Veuillez sélectionner un fichier image valide')
+    target.value = ''
+    createBookImageFile.value = null
+    return
+  }
+  
+  // Vérifier la taille du fichier (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Le fichier est trop volumineux. Taille maximale : 5MB')
+    target.value = ''
+    createBookImageFile.value = null
+    return
+  }
+  
+  createBookImageFile.value = file
+}
+
 // Fonctions pour les auteurs
 const openEditAuthorModal = (author: Author) => {
   editingAuthor.value = author
@@ -625,7 +1035,7 @@ const saveBook = async () => {
     const updateData = {
       titre: editForm.value.titre,
       description: editForm.value.description,
-      prix: editForm.value.prix,
+      prix: String(editForm.value.prix),
       stock: editForm.value.stock,
       isbn: editForm.value.isbn,
       datePublication: editForm.value.datePublication || null,
@@ -742,6 +1152,159 @@ const saveCategory = async () => {
       errorMessage = error.data.detail
     } else if (error.data && error.data.error) {
       errorMessage = error.data.error
+    }
+    
+    alert(errorMessage)
+  }
+}
+
+// Fonctions de création
+const createBook = async () => {
+  try {
+    const createData = {
+      titre: createBookForm.value.titre,
+      description: createBookForm.value.description || null,
+      prix: String(createBookForm.value.prix),
+      stock: createBookForm.value.stock,
+      isbn: createBookForm.value.isbn || null,
+      datePublication: createBookForm.value.datePublication || null,
+      nombrePages: createBookForm.value.nombrePages || null,
+      authors: createBookForm.value.authors.map(id => `/api/authors/${id}`),
+      categories: createBookForm.value.categories.map(id => `/api/categories/${id}`)
+    }
+    
+    console.log('Données à envoyer pour le livre:', createData)
+    console.log('Authors sélectionnés:', createBookForm.value.authors)
+    console.log('Categories sélectionnées:', createBookForm.value.categories)
+    
+    const response = await fetch(`${baseURL}/books`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      },
+      body: JSON.stringify(createData)
+    })
+    
+    console.log('Status de la réponse:', response.status)
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Erreur détaillée du serveur:', errorText)
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+    
+    const bookData = await response.json()
+    
+    // Si une image a été sélectionnée, l'uploader
+    if (createBookImageFile.value && bookData.id) {
+      try {
+        const formData = new FormData()
+        formData.append('image', createBookImageFile.value)
+        
+        await $fetch(`${baseURL}/books/${bookData.id}/upload-image`, {
+          method: 'POST',
+          body: formData
+        })
+      } catch (imageError: any) {
+        console.error('Erreur lors de l\'upload de l\'image:', imageError)
+        // On n'interrompt pas le processus si l'image échoue
+        alert('Livre créé avec succès, mais erreur lors de l\'upload de l\'image')
+      }
+    }
+    
+    // Recharger les livres pour afficher le nouveau livre
+    await fetchBooks()
+    closeCreateBookModal()
+    
+    alert('Livre créé avec succès !')
+  } catch (error: any) {
+    console.error('Erreur lors de la création du livre:', error)
+    
+    let errorMessage = 'Erreur lors de la création du livre'
+    if (error.message) {
+      errorMessage = error.message
+    }
+    
+    alert(errorMessage)
+  }
+}
+
+const createAuthor = async () => {
+  try {
+    const createData = {
+      firstName: createAuthorForm.value.firstName,
+      lastName: createAuthorForm.value.lastName,
+      nationality: createAuthorForm.value.nationality || null,
+      birthDate: createAuthorForm.value.birthDate || null
+    }
+    
+    const response = await fetch(`${baseURL}/authors`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      },
+      body: JSON.stringify(createData)
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    // Recharger les auteurs pour afficher le nouvel auteur
+    await fetchAuthors()
+    closeCreateAuthorModal()
+    
+    alert('Auteur créé avec succès !')
+  } catch (error: any) {
+    console.error('Erreur lors de la création de l\'auteur:', error)
+    
+    let errorMessage = 'Erreur lors de la création de l\'auteur'
+    if (error.message) {
+      errorMessage = error.message
+    }
+    
+    alert(errorMessage)
+  }
+}
+
+const createCategory = async () => {
+  try {
+    const createData = {
+      name: createCategoryForm.value.name,
+      description: createCategoryForm.value.description || null
+    }
+    
+    console.log('Données à envoyer pour la catégorie:', createData)
+    console.log('URL:', `${baseURL}/categories`)
+    console.log('Content-Type qui sera envoyé: application/ld+json')
+    
+    const response = await fetch(`${baseURL}/categories`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/ld+json',
+        'Accept': 'application/ld+json'
+      },
+      body: JSON.stringify(createData)
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    // Recharger les catégories pour afficher la nouvelle catégorie
+    await fetchCategories()
+    closeCreateCategoryModal()
+    
+    alert('Catégorie créée avec succès !')
+  } catch (error: any) {
+    console.error('Erreur lors de la création de la catégorie:', error)
+    console.error('Erreur complète:', error)
+    
+    let errorMessage = 'Erreur lors de la création de la catégorie'
+    if (error.message) {
+      errorMessage = error.message
     }
     
     alert(errorMessage)
