@@ -291,6 +291,11 @@
 <script setup lang="ts">
 import type { Book, Author, Category } from '~/types/index'
 
+// En nuxt.js le middleware est défini par son nom de fichier dans un dossier dédié
+definePageMeta({
+  middleware: 'admin'
+})
+
 // Configuration de la base URL de l'API
 const config = useRuntimeConfig()
 const baseURL = config.public.apiBase || 'http://127.0.0.1:8000/api'
@@ -329,6 +334,24 @@ const editingAuthor = ref<Author | null>(null)
 // États pour les modals de catégories
 const showEditCategoryModal = ref(false)
 const editingCategory = ref<Category | null>(null)
+
+// Système d'authentification admin (même que ManagementButton)
+const isAdmin = ref(false)
+const currentUser = inject('currentUser', ref(null)) as any
+
+// Watcher pour vérifier le statut admin
+watch(() => currentUser.value, (newUser: any) => {
+  if (newUser && Array.isArray(newUser.statuses)) {
+    isAdmin.value = newUser.statuses.some((s: any) => s.status_state === 2)
+  } else {
+    isAdmin.value = false
+  }
+  
+  // Si pas admin, rediriger
+  if (!isAdmin.value && import.meta.client) {
+    navigateTo('/')
+  }
+}, { immediate: true })
 
 // Fonction utilitaire pour formater les dates
 const formatDate = (date: string | null | undefined): string => {
@@ -642,10 +665,14 @@ const fetchCategories = async () => {
 
 // Chargement initial des données au montage du composant
 onMounted(async () => {
-  await Promise.all([
-    fetchBooks(),
-    fetchAuthors(),
-    fetchCategories()
-  ])
+  // Attendre que la vérification admin soit faite
+  // Si pas admin, le watcher redirigera automatiquement
+  if (isAdmin.value) {
+    await Promise.all([
+      fetchBooks(),
+      fetchAuthors(),
+      fetchCategories()
+    ])
+  }
 })
 </script>
