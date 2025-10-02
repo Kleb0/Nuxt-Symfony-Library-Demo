@@ -55,7 +55,24 @@ Nuxt-Symfony-Library-Demo/
 - **SQLite** (développement)
 - **MySQL/PostgreSQL** (production)
 
-## 🛠️ Installation et Configuration
+## � Comptes de Test
+
+Pour tester l'application, vous pouvez utiliser ces comptes pré-configurés :
+
+### **👨‍💼 Compte Administrateur**
+- **Identifiant** : `admin`
+- **Mot de passe** : `admin`
+- **Rôle** : Administrateur
+- **Accès** : Interface d'administration complète (gestion CRUD)
+
+### **👤 Compte Utilisateur Standard**
+- **Identifiant** : `Darki`
+- **Email** : `vador@mail.com`
+- **Mot de passe** : `21ABa!35A6`
+- **Rôle** : Utilisateur
+- **Accès** : Consultation, panier personnel
+
+## �🛠️ Installation et Configuration
 
 ### **Prérequis système**
 - **Node.js** ≥ 18.x
@@ -75,14 +92,39 @@ cd backend
 
 # Installation des dépendances
 composer install
+```
 
+#### **Option A : Import direct de la base de données (RECOMMANDÉ)**
+Pour une installation rapide avec toutes les données de test incluses :
+
+```bash
+# Créer la base de données vide
+php bin/console doctrine:database:create
+
+# Importer le fichier SQL fourni (avec données de test)
+# Pour MySQL/MariaDB :
+mysql -u [username] -p [database_name] < database_export.sql
+
+# Pour PostgreSQL :
+psql -U [username] -d [database_name] -f database_export.sql
+
+# Pour SQLite (par défaut) :
+sqlite3 var/data.db < database_export.sql
+```
+
+#### **Option B : Installation avec migrations et fixtures**
+Pour une installation depuis zéro :
+
+```bash
 # Configuration de la base de données
 php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
 
-# Chargement des données de test (optionnel)
+# Chargement des données de test
 php bin/console doctrine:fixtures:load
+```
 
+```bash
 # Démarrage du serveur de développement
 symfony server:start
 # OU
