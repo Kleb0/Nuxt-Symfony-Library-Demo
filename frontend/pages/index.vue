@@ -1,12 +1,12 @@
 <template>
-  <div>
-    <div class="parallax">
+  <div class="bg-[url('/images/Autumn_Leaves.jpg')] bg-cover bg-center bg-fixed bg-no-repeat">
+    <div class="h-[200px] bg-[url('/images/Autumn_Leaves.jpg')] bg-cover bg-center bg-fixed bg-no-repeat">
     </div>
       
       <Carousel />
       <HeroPage />
     
-    <div class="parallax"></div>
+    <div class="h-[200px] bg-[url('/images/Autumn_Leaves.jpg')] bg-cover bg-center bg-fixed bg-no-repeat"></div>
   </div>
 </template>
 
@@ -14,22 +14,3 @@
 import Carousel from '../components/carousel.vue';
 import HeroPage from '../components/HeroPage.vue';
 </script>
-
-<style scoped>
-body {
-  background-image: url('/images/Autumn_Leaves.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-}
-
-.parallax {
-  height: 200px;
-  background-image: url('/images/Autumn_Leaves.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-}
-</style>

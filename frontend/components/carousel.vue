@@ -1,24 +1,24 @@
 <template>
-  <div class="carousel-container">
-    <div v-if="loading" class="loading-message">Chargement des livres...</div>
-    <div v-else-if="allBooks.length === 0" class="no-books-message">Aucun livre trouvé</div>
-    <div v-else class="carousel-wrapper">
+  <div class="carousel-container bg-[#ede9d0]">
+    <div v-if="loading" class="loading-message text-center text-xl text-gray-600">Chargement des livres...</div>
+    <div v-else-if="allBooks.length === 0" class="no-books-message text-center text-xl text-gray-600">Aucun livre trouvé</div>
+    <div v-else class="carousel-wrapper flex items-center justify-center gap-10 w-full relative">
       <button 
         @click="previousCards" 
         @mouseenter="startContinuousScrollRight"
         @mouseleave="stopContinuousScroll"
-        class="nav-arrow nav-arrow-left"
+        class="nav-arrow nav-arrow-left border-none rounded-full w-20 h-20 flex items-center justify-center cursor-pointer transition-all duration-300 text-white shadow-lg opacity-0 flex-shrink-0"
       >
         <Icon name="heroicons:chevron-left" size="40" />
       </button>
 
-      <div class="carousel-viewport">
-        <div class="carousel-track" :style="{ transform: `translateX(${scrollOffset}px)` }">
+      <div class="carousel-viewport w-[1580px] h-[600px] overflow-hidden relative">
+        <div class="carousel-track flex flex-row gap-20 items-center justify-start h-full py-[75px]" :style="{ transform: `translateX(${scrollOffset}px)` }">
           <Card 
             v-for="(book, index) in infiniteBooks" 
             :key="`${book.id}-${index}`" 
             :book="book" 
-            class="carousel-card" 
+            class="carousel-card flex-shrink-0 w-[220px] relative z-[1] transition-all duration-300" 
           />
         </div>
       </div>
@@ -27,7 +27,7 @@
         @click="nextCards" 
         @mouseenter="startContinuousScrollLeft"
         @mouseleave="stopContinuousScroll"
-        class="nav-arrow nav-arrow-right"
+        class="nav-arrow nav-arrow-right border-none rounded-full w-20 h-20 flex items-center justify-center cursor-pointer transition-all duration-300 text-white shadow-lg opacity-0 flex-shrink-0"
       >
         <Icon name="heroicons:chevron-right" size="40" />
       </button>
@@ -138,31 +138,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.carousel-container {
-  background: #ede9d0;
-}
 
-.loading-message,
-.no-books-message {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #666;
-}
-
-.carousel-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-  width: 100%;
-  position: relative;
-}
 
 .carousel-viewport {
-  width: 1580px; 
-  height: 600px; 
-  overflow: hidden;
-  position: relative;
   mask: linear-gradient(
     to right, 
     transparent 0%, 
@@ -179,33 +157,15 @@ onUnmounted(() => {
   );
 }
 
+
 .carousel-track {
-  display: flex;
-  flex-direction: row;
-  gap: 80px;
-  align-items: center;
-  justify-content: flex-start;
   transition: transform 0.1s linear;
   will-change: transform;
-  height: 100%;
-  padding: 75px 0;
 }
 
 .nav-arrow {
   background: rgba(222, 165, 74, 0.9);
-  border: none;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  opacity: 0;
-  flex-shrink: 0;
 }
 
 .nav-arrow:hover {
@@ -229,16 +189,8 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.carousel-card {
-  flex-shrink: 0;
-  width: 220px; 
-  position: relative;
-  z-index: 1;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
 .carousel-card:hover {
   z-index: 10;
-  transform: scale(1.20); 
+  transform: scale(1.20);
 }
 </style>

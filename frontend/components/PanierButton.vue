@@ -1,8 +1,12 @@
 <template>
-  <button @click="goToCart" class="panier-btn" v-if="isLoggedIn">
-    <div class="cart-icon-container">
-      <ShoppingCartIcon class="icon" />
-      <div v-if="totalItems > 0" class="cart-badge">
+  <button 
+    @click="goToCart" 
+    class="panier-btn text-[#ede9d0] text-[28px] font-roboto no-underline py-3 px-6 rounded-xl transition-all duration-200 flex items-center gap-2 bg-transparent border-none cursor-pointer max-lg:text-2xl max-lg:py-2 max-lg:px-4 max-md:text-xl max-md:py-1 max-md:px-3 max-sm:text-lg" 
+    v-if="isLoggedIn"
+  >
+    <div class="cart-icon-container relative inline-flex">
+      <ShoppingCartIcon class="icon w-5 h-5" />
+      <div v-if="totalItems > 0" class="cart-badge absolute -top-[20px] left-[120px] bg-red-600 text-white rounded-full min-w-[30px] h-[30px] flex items-center justify-center text-sm font-bold leading-none max-lg:left-[70px] max-lg:-top-[15px] max-lg:min-w-[25px] max-lg:h-[25px] max-lg:text-xs max-md:left-[50px] max-md:-top-[10px] max-md:min-w-[20px] max-md:h-[20px] max-md:text-xs max-sm:left-[120px]">
         + {{ totalItems }}
       </div>
     </div>
@@ -73,58 +77,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.panier-btn {
-  color: #ede9d0;
-  font-size: 28px;
+/* CSS personnalisé pour les effets avancés */
+
+/* Police personnalisée */
+.font-roboto {
   font-family: 'Roboto', sans-serif;
-  text-decoration: none;
-  padding: 12px 24px;
-  border-radius: 12px;
-  transition: background 0.2s, color 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
 }
 
+/* Effet hover personnalisé */
 .panier-btn:hover {
   background: #3b3434;
   color: #fff;
-}
-
-.cart-icon-container {
-  position: relative;
-  display: inline-flex;
-}
-
-.cart-badge {
-  position: absolute;
-  top: -30px;
-  left: 150px;
-  background-color: #dc2626;
-  color: white;
-  border-radius: 50%;
-  min-width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.icon {
-  width: 20px;
-  height: 20px;
-}
-
-@media (max-width: 768px) {
-  .panier-btn {
-    font-size: 20px;
-    padding: 8px 16px;
-  }
 }
 </style>

@@ -13,6 +13,9 @@ export default {
       fontFamily: {
         'roboto': ['Roboto', 'sans-serif'],
       },
+      backgroundImage: {
+        'autumn': "url('/images/Autumn_Leaves.jpg')",
+      },
     },
   },
   plugins: [],

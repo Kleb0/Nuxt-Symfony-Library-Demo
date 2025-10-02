@@ -1,33 +1,32 @@
 <template>
   <div class="first-step">
-    <h1 class="title">Notre collection de livres ! </h1>
+    <h1 class="title text-center text-4xl mt-5 font-roboto text-gray-800">Notre collection de livres !</h1>
 
-
-    <div class="search-fields">
+    <div class="search-fields flex flex-row gap-6 justify-center mb-4 max-lg:flex-col max-lg:items-center max-lg:gap-4">
       <input
         v-model="search"
         type="text"
         placeholder="Rechercher un livre..."
-        class="search-bar"
+        class="search-bar w-[400px] mx-auto block py-3 px-5 text-lg rounded-lg border border-gray-300 font-roboto max-lg:w-[90%] max-lg:max-w-[350px] max-md:text-base max-md:py-2 max-md:px-4"
       />
       <input
         v-model="searchAuthor"
         type="text"
         placeholder="Rechercher un auteur..."
-        class="search-bar"
+        class="search-bar w-[400px] mx-auto block py-3 px-5 text-lg rounded-lg border border-gray-300 font-roboto max-lg:w-[90%] max-lg:max-w-[350px] max-md:text-base max-md:py-2 max-md:px-4"
       />
       <input
         v-model="searchCategory"
         type="text"
         placeholder="Rechercher une catégorie..."
-        class="search-bar"
+        class="search-bar w-[400px] mx-auto block py-3 px-5 text-lg rounded-lg border border-gray-300 font-roboto max-lg:w-[90%] max-lg:max-w-[350px] max-md:text-base max-md:py-2 max-md:px-4"
       />
     </div>
 
-    <div class="book-grid">
+    <div class="book-grid grid">
       <template v-for="(group, i) in Math.ceil(filteredBooks.length / 3)" :key="'group-' + i">
-        <div class="grid">
-          <Card v-for="book in filteredBooks.slice(i * 3, i * 3 + 3)" :key="book.id" :book="book" class="blue-square" />
+        <div class="grid-row w-full h-[600px] rounded-xl my-10 shadow-custom flex items-center justify-center gap-10 max-lg:flex-col max-lg:h-auto max-lg:py-8 max-lg:gap-6">
+          <Card v-for="book in filteredBooks.slice(i * 3, i * 3 + 3)" :key="book.id" :book="book" class="blue-square w-[300px] h-[500px] bg-blue-600 rounded-2xl m-12 shadow-book p-0 max-lg:m-4 max-lg:w-[280px] max-lg:h-[480px] max-md:w-[260px] max-md:h-[460px]" />
         </div>
       </template>
       <div class="cart"></div>
@@ -84,7 +83,7 @@ const fetchBooks = async () => {
     }
     
     books.value = books.value.filter(book => typeof book === 'object' && book !== null)
-    console.log('Books loaded:', books.value.length) // Pour débugger
+    console.log('Books loaded:', books.value.length) 
   } catch (error) {
     console.error('Erreur lors du chargement des livres:', error)
     books.value = []
@@ -97,60 +96,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* CSS personnalisé pour les effets avancés */
 
-.title {
-  text-align: center;
-  font-size: 2.5rem;
-  margin-top: 20px;
+/* Police personnalisée */
+.font-roboto {
   font-family: 'Roboto', sans-serif;
-  color: #333;
 }
 
-.book-grid {
-  display: grid;
-}
 
-.grid {
-  width: 100%;
-  height: 600px;
-  border-radius: 12px;
-  margin: 40px 0;
+.shadow-custom {
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
 }
 
-
-.blue-square {
-  width: 300px;
-  height: 500px;
-  background: #2563eb;
-  border-radius: 16px;
-  margin: 50px;
+.shadow-book {
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-  padding: 0;
 }
-
-.search-bar {
-  width: 400px;
-  margin: 24px auto 0 auto;
-  display: block;
-  padding: 12px 18px;
-  font-size: 1.1rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-family: 'Roboto', sans-serif;
-}
-
-.search-fields {
-  display: flex;
-  flex-direction: row;
-  gap: 24px;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-
 </style>

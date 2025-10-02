@@ -1,18 +1,18 @@
 <template>
-  <header class="header-bg">
-    <div class="rectangles-wrapper">
+  <header class="header-bg bg-[#ff6f49] min-h-[380px] w-full shadow-custom transition-shadow duration-300 flex items-center justify-between relative px-20 py-5 gap-10 max-xl:flex-col max-xl:px-5 max-xl:gap-8">
+    <div class="rectangles-wrapper flex flex-col items-center justify-center flex-1 gap-8 ml-[150px]">
       <div class="rectangle rectangle-red-text">
-        <span class="header-title">Nuxt Symfony Library</span>
+        <span class="header-title text-[#ede9d0] text-6xl font-bold font-roboto tracking-wide text-center max-md:text-4xl">Nuxt Symfony Library</span>
       </div>
-      <nav class="menu-bar">
+      <nav class="menu-bar flex flex-row items-center justify-center gap-2.5 w-[700px] h-[100px] rounded-3xl max-lg:w-[90%] max-lg:max-w-[600px] max-md:w-[95%] max-md:max-w-[500px] max-md:gap-1 max-sm:flex-wrap max-sm:h-auto max-sm:py-2">
         <ManagementButton />
-        <NuxtLink to="/" class="menu-item">Accueil</NuxtLink>
-        <NuxtLink to="/livres" class="menu-item">Livres</NuxtLink>
-        <NuxtLink to="/about" class="menu-item">À propos</NuxtLink>
+        <NuxtLink to="/" class="menu-item text-[#ede9d0] text-3xl font-roboto font-medium no-underline py-3 px-6 rounded-xl transition-all duration-200 max-lg:text-2xl max-lg:py-2 max-lg:px-4 max-md:text-xl max-md:py-1 max-md:px-3 max-sm:text-lg">Accueil</NuxtLink>
+        <NuxtLink to="/livres" class="menu-item text-[#ede9d0] text-3xl font-roboto font-medium no-underline py-3 px-6 rounded-xl transition-all duration-200 max-lg:text-2xl max-lg:py-2 max-lg:px-4 max-md:text-xl max-md:py-1 max-md:px-3 max-sm:text-lg">Livres</NuxtLink>
+        <NuxtLink to="/about" class="menu-item text-[#ede9d0] text-3xl font-roboto font-medium no-underline py-3 px-6 rounded-xl transition-all duration-200 max-lg:text-2xl max-lg:py-2 max-lg:px-4 max-md:text-xl max-md:py-1 max-md:px-3 max-sm:text-lg">À propos</NuxtLink>
         <PanierButton />
       </nav>
     </div>
-        <div class="loginstate-wrapper">
+    <div class="loginstate-wrapper w-[300px] h-[280px] flex items-center justify-center flex-shrink-0 max-xl:w-full max-xl:max-w-[300px] max-xl:mb-[50px] max-xl:ml-[150px]">
       <LoginState />
     </div>
   </header>
@@ -29,66 +29,15 @@ const updateCurrentUser = inject('updateCurrentUser')
 </script>
 
 <style scoped>
- .header-title {
-   color: #ede9d0;
-   font-size: 60px;
-   font-weight: bold;
-   font-family: 'Roboto', sans-serif !important;
-   letter-spacing: 1px;
-   text-align: center;
- }
-.header-bg {
-  background-color: #ff6f49;
-  min-height: 380px;
-  width: 100%;
+
+.font-roboto {
+  font-family: 'Roboto', sans-serif !important;
+}
+
+.shadow-custom {
   box-shadow: 0 4px 16px 0 rgba(92, 235, 156, 0.15);
-  transition: box-shadow 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  padding: 20px 80px;
-  gap: 40px;
-}
-.rectangles-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  gap: 32px;
-  margin-left: 150px;
 }
 
-.loginstate-wrapper {
-  width: 300px;
-  height: 280px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.menu-bar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 700px;
-  height: 100px;
-  border-radius: 24px;
-}
-.menu-item {
-  color: #ede9d0;
-  font-size: 30px;
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
-  text-decoration: none;
-  padding: 12px 24px;
-  border-radius: 12px;
-  transition: background 0.2s, color 0.2s;
-}
 .menu-item:hover {
   background: #3b3434;
   color: #fff;
@@ -96,40 +45,8 @@ const updateCurrentUser = inject('updateCurrentUser')
 
 @media (max-width: 1200px) {
   .header-bg {
-    flex-direction: column;
-    padding: 20px;
     transform: translateX(-50px);
     width: calc(100% + 50px);
-    gap: 30px;
-  }
-  
-  .loginstate-wrapper {
-    width: 100%;
-    max-width: 300px;
-    margin-bottom: 50px;
-    margin-left: 150px;
   }
 }
-
-@media (max-width: 768px) {
-  .header-title {
-    font-size: 40px;
-  }
-  
-  .menu-item {
-    font-size: 24px;
-    padding: 8px 16px;
-  }
-  
-  .rectangle {
-    width: 90%;
-    max-width: 500px;
-  }
-  
-  .menu-bar {
-    width: 90%;
-    max-width: 500px;
-  }
-}
-
 </style>
