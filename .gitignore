@@ -36,8 +36,8 @@ dist/
 build/
 
 # Variables d'environnement
-.env
-.env.local
+# .env                    # Autorisé pour la portabilité du projet
+# .env.local              # Autorisé pour la configuration locale
 .env.local.php
 .env.*.local
 .env.development.local

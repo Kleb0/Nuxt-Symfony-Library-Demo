@@ -80,8 +80,20 @@ Pour tester l'application, vous pouvez utiliser ces comptes pré-configurés :
 ### **Prérequis système**
 - **Node.js** ≥ 18.x
 - **PHP** ≥ 8.2
-- **Composer** (gestionnaire de dépendances PHP)
 - **npm** ou **yarn**
+- **XAMPP** avec MariaDB/MySQL (ou serveur de base de données équivalent)
+  - MariaDB/MySQL doit être démarré sur le port 3306
+  - Utilisateur root avec accès localhost
+
+**Note** : le projet a son installation locale, vous devrez donc probablement installer composer
+de votre côté
+
+### **⚙️ Configuration XAMPP**
+Assurez-vous que XAMPP est démarré avec :
+- ✅ **Apache** (optionnel pour ce projet)
+- ✅ **MySQL/MariaDB** (requis - port 3306)
+
+Vérifiez que vous pouvez accéder à phpMyAdmin via `http://localhost/phpmyadmin`
 
 ### **1. Cloner le projet**
 ```bash
@@ -93,27 +105,26 @@ cd Nuxt-Symfony-Library-Demo
 ```bash
 cd backend
 
+# Installation locale de Composer via votre terminal powershell
+Invoke-WebRequest -Uri "https://getcomposer.org/installer" -OutFile "composer-setup.php"
+php composer-setup.php --install-dir=. --filename=composer
+
 # Installation des dépendances
-composer install
+php ./composer install
 ```
 
-#### **: Importez la base de données nuxt_symfony_db.sql**
-Pour une installation rapide avec toutes les données de test incluses :
+**✅ Configuration .ENV : Le projet inclut des fichiers `.env` pré-configurés pour XAMPP/MariaDB. 
 
+##### **Création et import de la base de données**
 ```bash
-# Créer la base de données vide
+# Créer la base de données
 php bin/console doctrine:database:create
 
-# Importer le fichier SQL fourni (attention j'ai créé ce projet avec MariaDB)
-mysql -u [username] -p [database_name] < database_export.sql
-
-```
-
+# importer dans votre phpmyadmin la base de données 'nuxt-symfony-db.sql'
+#### **Démarrage du serveur**
 ```bash
 # Démarrage du serveur de développement
 symfony server:start
-# OU
-php -S localhost:8000 -t public/
 ```
 **Backend accessible sur :** `http://localhost:8000`
 
