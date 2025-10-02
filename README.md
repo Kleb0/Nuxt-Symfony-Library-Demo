@@ -262,7 +262,3 @@ Ce projet a été développé dans le cadre d'un test technique. Pour toute sugg
 - **Période** : Octobre 2025
 - **Type** : Test technique
 
-## � License
-
-Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
