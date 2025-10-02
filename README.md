@@ -51,9 +51,12 @@ Nuxt-Symfony-Library-Demo/
 - **Symfony Serializer** - Sérialisation JSON
 - **Symfony Validator** - Validation des données
 
-### 🗄️ **Base de Données**
-- **SQLite** (développement)
-- **MySQL/PostgreSQL** (production)
+### 🗄️ **Base de Données et serveur utilisé **
+- **MariaDB** 10.4.32 (production)
+  - **Serveur** : 127.0.0.1 via TCP/IP
+  - **Version** : 10.4.32-MariaDB - mariadb.org binary distribution
+  - **Utilisateur** : root@
+  - **Jeu de caractères** : UTF-8 Unicode (utf8mb4)
 
 ## � Comptes de Test
 
@@ -94,34 +97,16 @@ cd backend
 composer install
 ```
 
-#### **Option A : Import direct de la base de données (RECOMMANDÉ)**
+#### **: Importez la base de données nuxt_symfony_db.sql**
 Pour une installation rapide avec toutes les données de test incluses :
 
 ```bash
 # Créer la base de données vide
 php bin/console doctrine:database:create
 
-# Importer le fichier SQL fourni (avec données de test)
-# Pour MySQL/MariaDB :
+# Importer le fichier SQL fourni (attention j'ai créé ce projet avec MariaDB)
 mysql -u [username] -p [database_name] < database_export.sql
 
-# Pour PostgreSQL :
-psql -U [username] -d [database_name] -f database_export.sql
-
-# Pour SQLite (par défaut) :
-sqlite3 var/data.db < database_export.sql
-```
-
-#### **Option B : Installation avec migrations et fixtures**
-Pour une installation depuis zéro :
-
-```bash
-# Configuration de la base de données
-php bin/console doctrine:database:create
-php bin/console doctrine:migrations:migrate
-
-# Chargement des données de test
-php bin/console doctrine:fixtures:load
 ```
 
 ```bash
@@ -199,7 +184,7 @@ php bin/console doctrine:migrations:diff  # Créer une migration
 php bin/console cache:clear            # Vider le cache
 ```
 
-## 🌐 APIs Endpoints
+## 🌐 Quelques APIs Endpoints :
 
 ### **Authentification**
 - `POST /api/auth/login` - Connexion utilisateur
