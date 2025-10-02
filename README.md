@@ -156,7 +156,6 @@ npm run dev
 - ✅ **Protection des routes** sensibles
 
 ### **🔒 Sécurité**
-- ✅ **Authentification JWT** sécurisée
 - ✅ **Gestion des rôles** (utilisateur/admin)
 - ✅ **Protection des routes** avec middlewares
 - ✅ **Validation des données** côté backend
