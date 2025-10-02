@@ -1,8 +1,8 @@
 <template>
-  <div class="w-full max-w-[1000px] h-[1000px] flex flex-col my-5 mx-auto items-center px-4 py-10 gap-4">
+  <div class="w-full max-w-[1000px] min-h-[1000px] flex flex-col my-5 mx-auto items-center px-4 py-10 gap-4">
    
     <!-- Carte principale du livre -->
-    <div class="w-full max-w-[850px] h-[800px] bg-[#e7e1d5] rounded-3xl border-2 border-white/20 p-5 flex flex-col items-center lg:h-auto lg:pb-6 book-card">
+    <div class="w-full max-w-[850px] min-h-[800px] bg-[#e7e1d5] rounded-3xl border-2 border-white/20 p-5 flex flex-col items-center lg:pb-6 book-card">
      
       <!-- Container de l'image -->
       <div class="h-[400px] rounded-[20px] w-[480px] flex justify-center lg:w-[450px] lg:h-[350px] image-container">
@@ -11,22 +11,22 @@
       </div>
       
       <!-- Container des détails -->
-      <div class="h-[300px] w-[80%] flex justify-center p-2.5 mt-20 rounded-[20px] lg:w-[95%] lg:h-auto lg:mt-20">
-        <div class="w-[80%] h-[80%] text-[#063c2b] bg-white/90 rounded-[20px] px-4 py-3 box-border break-words lg:w-full details-content">
+      <div class="w-[80%] flex justify-center p-2.5 mt-20 rounded-[20px] lg:w-[95%] lg:mt-20 flex-1">
+        <div class="w-[80%] text-[#063c2b] bg-white/90 rounded-[20px] px-4 py-4 box-border break-words lg:w-full details-content overflow-y-auto">
           <p class="mb-2 book-meta"><strong>Auteur:</strong> {{ book.auteur || '—' }}</p>
           <p class="mb-2 book-meta"><strong>Catégorie:</strong> {{ book.categorie || '—' }}</p>
           <h2 class="text-xl font-bold my-2 mb-1.5 book-title">Résumé</h2>
-          <p class="leading-relaxed book-resume">{{ book.resume || '—' }}</p>
-          <div class="mt-3 text-lg book-price"><strong>Prix:</strong> <span>{{ book.unitPrice ? book.unitPrice + '€' : '—' }}</span></div>
+          <p class="leading-relaxed book-resume mb-4">{{ book.resume || '—' }}</p>
+          <div class="mt-3 text-lg book-price mb-4"><strong>Prix:</strong> <span>{{ book.unitPrice ? book.unitPrice + '€' : '—' }}</span></div>
           <button 
             v-if="isLoggedIn" 
             @click="addToCart" 
-            class="border-none px-6 py-3 rounded-[20px] font-semibold text-base cursor-pointer mt-6 w-full transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed add-to-cart-btn"
+            class="border-none px-6 py-3 rounded-[20px] font-semibold text-base cursor-pointer mt-4 w-full transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed add-to-cart-btn"
             :disabled="isAdding"
           >
             {{ isAdding ? 'Ajout...' : 'Ajouter au panier' }}
           </button>
-          <div v-if="!isLoggedIn" class="mt-6 p-3 bg-gray-100 rounded-lg text-red-500 text-center italic login-required">
+          <div v-if="!isLoggedIn" class="mt-4 p-3 bg-gray-100 rounded-lg text-red-500 text-center italic login-required">
             Connectez-vous pour ajouter au panier
           </div>
         </div>
