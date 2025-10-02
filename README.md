@@ -103,13 +103,13 @@ cd Nuxt-Symfony-Library-Demo
 
 ### **2. Installation du Backend (Symfony)**
 ```bash
-cd backend
+cd backend # IMPORTANT : Assurez-vous que votre terminal est bien dans le dossier backend pour toute la partie Symfony
 
 # Installation locale de Composer via votre terminal powershell
 Invoke-WebRequest -Uri "https://getcomposer.org/installer" -OutFile "composer-setup.php"
 php composer-setup.php --install-dir=. --filename=composer
 
-# Installation des dépendances
+# Installation des dépendances (peut prendre un peu de temps)
 php ./composer install
 ```
 
@@ -122,17 +122,15 @@ php bin/console doctrine:database:create
 
 # importer dans votre phpmyadmin la base de données 'nuxt-symfony-db.sql'
 #### **Démarrage du serveur**
-```bash
-# Démarrage du serveur de développement
 symfony server:start
 ```
 **Backend accessible sur :** `http://localhost:8000`
 
 ### **3. Installation du Frontend (Nuxt)**
 ```bash
-cd frontend
+cd frontend #Important : Pour la partie frontend, votre terminal doit être sur le dossier frontend.
 
-# Installation des dépendances
+# Installation des dépendances (peut aussi prendre un peu de temps)
 npm install
 
 # Démarrage du serveur de développement
