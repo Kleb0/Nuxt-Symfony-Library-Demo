@@ -174,7 +174,6 @@ npm run dev
 - **Typés** : TypeScript pour la robustesse
 - **Accessibles** : Bonnes pratiques d'accessibilité
 
-## � Scripts Disponibles
 
 ### **Frontend**
 ```bash
